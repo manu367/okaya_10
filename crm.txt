@@ -1,0 +1,949 @@
+-- phpMyAdmin SQL Dump
+-- version 5.0.4
+-- https://www.phpmyadmin.net/
+--
+-- Host: 127.0.0.1
+-- Generation Time: Feb 04, 2026 at 01:04 PM
+-- Server version: 10.4.16-MariaDB
+-- PHP Version: 7.4.12
+
+SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+START TRANSACTION;
+SET time_zone = "+00:00";
+#dsds
+# crrrddcdc
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+
+--
+-- Database: `crm`
+--
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `activity_master`
+--
+
+CREATE TABLE `activity_master` (
+  `activity_code` varchar(20) NOT NULL,
+  `activity_name` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `category`
+--
+
+CREATE TABLE `category` (
+  `cat_id` int(11) NOT NULL,
+  `cat_name` varchar(50) NOT NULL,
+  `sort_order` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `category`
+--
+
+INSERT INTO `category` (`cat_id`, `cat_name`, `sort_order`) VALUES
+(1, 'Programming', 2),
+(2, 'Java', 4),
+(3, 'JavaScript', 5),
+(4, 'IBPS SO IT', 0),
+(5, 'Frontend', 1),
+(6, 'Backend', 3),
+(7, 'Database', 4),
+(8, 'Cloud', 6),
+(9, 'DevOps', 7),
+(10, 'Macgine Learning', 8),
+(11, 'Development', 9),
+(12, 'Business Ideas', 10),
+(13, 'Hacking', 11),
+(14, 'UPSC', 12),
+(15, 'Stock Market', 13),
+(16, 'Mobile Development', 14);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `category_by_course`
+--
+
+CREATE TABLE `category_by_course` (
+  `cc_id` int(11) NOT NULL,
+  `cat_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `category_by_course`
+--
+
+INSERT INTO `category_by_course` (`cc_id`, `cat_id`, `course_id`) VALUES
+(1, 2, 1),
+(2, 1, 1),
+(3, 6, 1),
+(5, 3, 2),
+(6, 5, 2),
+(7, 1, 2);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `content`
+--
+
+CREATE TABLE `content` (
+  `content_id` int(11) NOT NULL,
+  `content_index_id` int(11) NOT NULL,
+  `content_data` longtext NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `content_index`
+--
+
+CREATE TABLE `content_index` (
+  `content_index_id` int(11) NOT NULL,
+  `content_name` longtext NOT NULL,
+  `content_type` enum('VIDEO','ARTICLE','QUIZ','PDF') NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `content_metadata`
+--
+
+CREATE TABLE `content_metadata` (
+  `meta_id` int(11) NOT NULL,
+  `content_id` int(11) NOT NULL,
+  `title` varchar(255) DEFAULT NULL,
+  `description` text DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `content_notes`
+--
+
+CREATE TABLE `content_notes` (
+  `note_id` int(11) NOT NULL,
+  `content_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `note_text` longtext NOT NULL,
+  `created_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course`
+--
+
+CREATE TABLE `course` (
+  `course_id` int(11) NOT NULL,
+  `course_name` varchar(150) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `course`
+--
+
+INSERT INTO `course` (`course_id`, `course_name`) VALUES
+(1, 'Java tutorial'),
+(2, 'Javascript tutorial');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course_activity`
+--
+
+CREATE TABLE `course_activity` (
+  `activity_id` int(11) NOT NULL,
+  `enrollment_id` int(11) NOT NULL,
+  `activity_type` enum('VIDEO','QUIZ','PRACTICE','NOTE','CONTENT_VIEW') NOT NULL,
+  `reference_id` int(11) DEFAULT NULL,
+  `activity_time` datetime DEFAULT current_timestamp(),
+  `duration_seconds` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course_practice_set`
+--
+
+CREATE TABLE `course_practice_set` (
+  `cp_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `practice_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `course_progress`
+--
+
+CREATE TABLE `course_progress` (
+  `progress_id` int(11) NOT NULL,
+  `enrollment_id` int(11) NOT NULL,
+  `total_contents` int(11) DEFAULT NULL,
+  `completed_contents` int(11) DEFAULT NULL,
+  `total_quizzes` int(11) DEFAULT NULL,
+  `attempted_quizzes` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `daily_study_log`
+--
+
+CREATE TABLE `daily_study_log` (
+  `log_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `study_date` date NOT NULL,
+  `total_minutes` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `permission`
+--
+
+CREATE TABLE `permission` (
+  `per_id` int(11) NOT NULL,
+  `per_name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `permission`
+--
+
+INSERT INTO `permission` (`per_id`, `per_name`) VALUES
+(1, 'user_view'),
+(2, 'user_create'),
+(3, 'user_view'),
+(4, 'user_edit'),
+(5, 'user_delete'),
+(6, 'user_activate'),
+(7, 'user_deactivate'),
+(8, 'user_suspend'),
+(9, 'user_restore'),
+(10, 'user_change_role'),
+(11, 'user_login'),
+(12, 'user_logout'),
+(13, 'user_password_reset'),
+(14, 'user_password_force_reset'),
+(15, 'user_email_verify'),
+(16, 'user_phone_verify'),
+(17, 'user_profile_view'),
+(18, 'user_profile_edit'),
+(19, 'user_avatar_update'),
+(20, 'role_view'),
+(21, 'role_create'),
+(22, 'role_edit'),
+(23, 'role_delete'),
+(24, 'role_assign'),
+(25, 'role_remove'),
+(26, 'permission_view'),
+(27, 'permission_create'),
+(28, 'permission_edit'),
+(29, 'permission_delete'),
+(30, 'permission_assign'),
+(31, 'permission_revoke'),
+(32, 'permission_sync'),
+(33, 'permission_override'),
+(34, 'content_view'),
+(35, 'content_create'),
+(36, 'content_edit'),
+(37, 'content_delete'),
+(38, 'content_publish'),
+(39, 'content_unpublish'),
+(40, 'content_archive'),
+(41, 'order_view'),
+(42, 'order_create'),
+(43, 'order_edit'),
+(44, 'order_cancel'),
+(45, 'order_refund'),
+(46, 'order_status_change'),
+(47, 'payment_view'),
+(48, 'payment_initiate'),
+(49, 'payment_refund'),
+(50, 'payment_retry'),
+(51, 'invoice_view'),
+(52, 'invoice_download'),
+(53, 'approval_view'),
+(54, 'approval_request'),
+(55, 'approval_approve'),
+(56, 'approval_reject'),
+(57, 'report_view'),
+(58, 'report_download'),
+(59, 'report_export'),
+(60, 'ticket_view'),
+(61, 'ticket_create'),
+(62, 'ticket_reply'),
+(63, 'ticket_close'),
+(64, 'ticket_assign'),
+(65, 'settings_view'),
+(66, 'settings_edit'),
+(67, 'system_config_update'),
+(68, 'log_view'),
+(69, 'audit_log_view'),
+(70, 'cache_clear'),
+(71, 'maintenance_mode'),
+(72, 'notification_view'),
+(73, 'notification_send'),
+(74, 'notification_delete'),
+(75, 'file_upload'),
+(76, 'file_view'),
+(77, 'file_delete'),
+(78, 'login_as_user'),
+(79, 'force_logout_user'),
+(80, 'ip_block'),
+(81, 'ip_unblock'),
+(82, 'full_access'),
+(83, 'god_mode');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `practice_set`
+--
+
+CREATE TABLE `practice_set` (
+  `practice_id` int(11) NOT NULL,
+  `practice_questions` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`practice_questions`))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz`
+--
+
+CREATE TABLE `quiz` (
+  `quiz_id` int(11) NOT NULL,
+  `quiz_title` varchar(255) NOT NULL,
+  `quiz_data` longtext NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `cat_id` int(11) NOT NULL,
+  `total_marks` int(11) DEFAULT NULL,
+  `duration_minutes` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz_attempt`
+--
+
+CREATE TABLE `quiz_attempt` (
+  `attempt_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `quiz_id` int(11) NOT NULL,
+  `obtained_marks` int(11) DEFAULT NULL,
+  `total_marks` int(11) DEFAULT NULL,
+  `attempt_date` datetime DEFAULT current_timestamp(),
+  `duration_taken` int(11) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `quiz_attempt_analysis`
+--
+
+CREATE TABLE `quiz_attempt_analysis` (
+  `qa_id` int(11) NOT NULL,
+  `attempt_id` int(11) NOT NULL,
+  `question_id` int(11) DEFAULT NULL,
+  `is_correct` tinyint(1) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `roles`
+--
+
+CREATE TABLE `roles` (
+  `roles_id` int(11) NOT NULL,
+  `role_name` varchar(50) NOT NULL,
+  `sort_order` int(11) DEFAULT 0
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `roles`
+--
+
+INSERT INTO `roles` (`roles_id`, `role_name`, `sort_order`) VALUES
+(1, 'Admin', 0),
+(2, 'Manager', 0),
+(3, 'Editor', 0),
+(4, 'User', 0),
+(5, 'Moderator', 0),
+(6, 'Support', 0),
+(7, 'Accountant', 0),
+(8, 'Sales', 0),
+(9, 'Developer', 0);
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `role_permission`
+--
+
+CREATE TABLE `role_permission` (
+  `roles_id` int(11) NOT NULL,
+  `per_id` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `status_type`
+--
+
+CREATE TABLE `status_type` (
+  `statu_id` int(11) NOT NULL,
+  `status_name` varchar(50) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `status_type`
+--
+
+INSERT INTO `status_type` (`statu_id`, `status_name`) VALUES
+(1, 'Active'),
+(2, 'Inactive'),
+(3, 'Draft'),
+(4, 'Progress'),
+(5, 'Completed'),
+(6, 'Pending'),
+(7, 'Rejected'),
+(8, 'On Hold'),
+(9, 'Cancelled'),
+(10, 'Failed'),
+(11, 'Expired'),
+(12, 'Archived'),
+(13, 'Deleted'),
+(14, 'Hidden'),
+(15, 'Disabled'),
+(16, 'Blocked'),
+(17, 'Suspended'),
+(18, 'Blacklisted'),
+(19, 'Verified');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subscription_type`
+--
+
+CREATE TABLE `subscription_type` (
+  `sub_id` int(11) NOT NULL,
+  `sub_type` enum('Free','Paid') DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Dumping data for table `subscription_type`
+--
+
+INSERT INTO `subscription_type` (`sub_id`, `sub_type`) VALUES
+(1, 'Free'),
+(2, 'Paid');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `users`
+--
+
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `usersacvity`
+--
+
+CREATE TABLE `usersacvity` (
+  `user_id` int(11) NOT NULL,
+  `user_name` varchar(100) DEFAULT NULL,
+  `email` varchar(100) DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_course_enrollment`
+--
+
+CREATE TABLE `user_course_enrollment` (
+  `enrollment_id` int(11) NOT NULL,
+  `user_id` int(11) NOT NULL,
+  `course_id` int(11) NOT NULL,
+  `enrolled_on` datetime DEFAULT current_timestamp(),
+  `last_accessed` datetime DEFAULT NULL,
+  `status` enum('ACTIVE','COMPLETED','PAUSED','DROPPED') DEFAULT 'ACTIVE',
+  `progress_percent` decimal(5,2) DEFAULT 0.00
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_last_activity`
+--
+
+CREATE TABLE `user_last_activity` (
+  `user_id` int(11) NOT NULL,
+  `course_id` int(11) DEFAULT NULL,
+  `last_activity` datetime DEFAULT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `user_login_attempt`
+--
+
+CREATE TABLE `user_login_attempt` (
+  `attempt_id` int(11) NOT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `ip_address` varchar(50) DEFAULT NULL,
+  `success` tinyint(1) DEFAULT NULL,
+  `attempted_at` datetime DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+--
+-- Indexes for dumped tables
+--
+
+--
+-- Indexes for table `activity_master`
+--
+ALTER TABLE `activity_master`
+  ADD PRIMARY KEY (`activity_code`);
+
+--
+-- Indexes for table `category`
+--
+ALTER TABLE `category`
+  ADD PRIMARY KEY (`cat_id`);
+
+--
+-- Indexes for table `category_by_course`
+--
+ALTER TABLE `category_by_course`
+  ADD PRIMARY KEY (`cc_id`),
+  ADD KEY `cat_id` (`cat_id`),
+  ADD KEY `course_id` (`course_id`);
+
+--
+-- Indexes for table `content`
+--
+ALTER TABLE `content`
+  ADD PRIMARY KEY (`content_id`),
+  ADD KEY `content_index_id` (`content_index_id`);
+
+--
+-- Indexes for table `content_index`
+--
+ALTER TABLE `content_index`
+  ADD PRIMARY KEY (`content_index_id`);
+
+--
+-- Indexes for table `content_metadata`
+--
+ALTER TABLE `content_metadata`
+  ADD PRIMARY KEY (`meta_id`),
+  ADD KEY `content_id` (`content_id`);
+
+--
+-- Indexes for table `content_notes`
+--
+ALTER TABLE `content_notes`
+  ADD PRIMARY KEY (`note_id`),
+  ADD KEY `content_id` (`content_id`),
+  ADD KEY `user_id` (`user_id`);
+
+--
+-- Indexes for table `course`
+--
+ALTER TABLE `course`
+  ADD PRIMARY KEY (`course_id`);
+
+--
+-- Indexes for table `course_activity`
+--
+ALTER TABLE `course_activity`
+  ADD PRIMARY KEY (`activity_id`),
+  ADD KEY `enrollment_id` (`enrollment_id`);
+
+--
+-- Indexes for table `course_practice_set`
+--
+ALTER TABLE `course_practice_set`
+  ADD PRIMARY KEY (`cp_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `practice_id` (`practice_id`);
+
+--
+-- Indexes for table `course_progress`
+--
+ALTER TABLE `course_progress`
+  ADD PRIMARY KEY (`progress_id`),
+  ADD KEY `enrollment_id` (`enrollment_id`);
+
+--
+-- Indexes for table `daily_study_log`
+--
+ALTER TABLE `daily_study_log`
+  ADD PRIMARY KEY (`log_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `course_id` (`course_id`);
+
+--
+-- Indexes for table `permission`
+--
+ALTER TABLE `permission`
+  ADD PRIMARY KEY (`per_id`);
+
+--
+-- Indexes for table `practice_set`
+--
+ALTER TABLE `practice_set`
+  ADD PRIMARY KEY (`practice_id`);
+
+--
+-- Indexes for table `quiz`
+--
+ALTER TABLE `quiz`
+  ADD PRIMARY KEY (`quiz_id`),
+  ADD KEY `course_id` (`course_id`),
+  ADD KEY `cat_id` (`cat_id`);
+
+--
+-- Indexes for table `quiz_attempt`
+--
+ALTER TABLE `quiz_attempt`
+  ADD PRIMARY KEY (`attempt_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `quiz_id` (`quiz_id`);
+
+--
+-- Indexes for table `quiz_attempt_analysis`
+--
+ALTER TABLE `quiz_attempt_analysis`
+  ADD PRIMARY KEY (`qa_id`),
+  ADD KEY `attempt_id` (`attempt_id`);
+
+--
+-- Indexes for table `roles`
+--
+ALTER TABLE `roles`
+  ADD PRIMARY KEY (`roles_id`);
+
+--
+-- Indexes for table `role_permission`
+--
+ALTER TABLE `role_permission`
+  ADD PRIMARY KEY (`roles_id`,`per_id`);
+
+--
+-- Indexes for table `status_type`
+--
+ALTER TABLE `status_type`
+  ADD PRIMARY KEY (`statu_id`);
+
+--
+-- Indexes for table `subscription_type`
+--
+ALTER TABLE `subscription_type`
+  ADD PRIMARY KEY (`sub_id`);
+
+--
+-- Indexes for table `users`
+--
+ALTER TABLE `users`
+  ADD PRIMARY KEY (`user_id`);
+
+--
+-- Indexes for table `usersacvity`
+--
+ALTER TABLE `usersacvity`
+  ADD PRIMARY KEY (`user_id`);
+
+--
+-- Indexes for table `user_course_enrollment`
+--
+ALTER TABLE `user_course_enrollment`
+  ADD PRIMARY KEY (`enrollment_id`),
+  ADD KEY `user_id` (`user_id`),
+  ADD KEY `course_id` (`course_id`);
+
+--
+-- Indexes for table `user_last_activity`
+--
+ALTER TABLE `user_last_activity`
+  ADD PRIMARY KEY (`user_id`),
+  ADD KEY `course_id` (`course_id`);
+
+--
+-- Indexes for table `user_login_attempt`
+--
+ALTER TABLE `user_login_attempt`
+  ADD PRIMARY KEY (`attempt_id`);
+
+--
+-- AUTO_INCREMENT for dumped tables
+--
+
+--
+-- AUTO_INCREMENT for table `category`
+--
+ALTER TABLE `category`
+  MODIFY `cat_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
+
+--
+-- AUTO_INCREMENT for table `category_by_course`
+--
+ALTER TABLE `category_by_course`
+  MODIFY `cc_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
+
+--
+-- AUTO_INCREMENT for table `content`
+--
+ALTER TABLE `content`
+  MODIFY `content_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `content_index`
+--
+ALTER TABLE `content_index`
+  MODIFY `content_index_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `content_metadata`
+--
+ALTER TABLE `content_metadata`
+  MODIFY `meta_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `content_notes`
+--
+ALTER TABLE `content_notes`
+  MODIFY `note_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `course`
+--
+ALTER TABLE `course`
+  MODIFY `course_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `course_activity`
+--
+ALTER TABLE `course_activity`
+  MODIFY `activity_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `course_practice_set`
+--
+ALTER TABLE `course_practice_set`
+  MODIFY `cp_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `course_progress`
+--
+ALTER TABLE `course_progress`
+  MODIFY `progress_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `daily_study_log`
+--
+ALTER TABLE `daily_study_log`
+  MODIFY `log_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `permission`
+--
+ALTER TABLE `permission`
+  MODIFY `per_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=84;
+
+--
+-- AUTO_INCREMENT for table `practice_set`
+--
+ALTER TABLE `practice_set`
+  MODIFY `practice_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `quiz`
+--
+ALTER TABLE `quiz`
+  MODIFY `quiz_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `quiz_attempt`
+--
+ALTER TABLE `quiz_attempt`
+  MODIFY `attempt_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `quiz_attempt_analysis`
+--
+ALTER TABLE `quiz_attempt_analysis`
+  MODIFY `qa_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `roles`
+--
+ALTER TABLE `roles`
+  MODIFY `roles_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=10;
+
+--
+-- AUTO_INCREMENT for table `status_type`
+--
+ALTER TABLE `status_type`
+  MODIFY `statu_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+
+--
+-- AUTO_INCREMENT for table `subscription_type`
+--
+ALTER TABLE `subscription_type`
+  MODIFY `sub_id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+
+--
+-- AUTO_INCREMENT for table `users`
+--
+ALTER TABLE `users`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `usersacvity`
+--
+ALTER TABLE `usersacvity`
+  MODIFY `user_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_course_enrollment`
+--
+ALTER TABLE `user_course_enrollment`
+  MODIFY `enrollment_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `user_login_attempt`
+--
+ALTER TABLE `user_login_attempt`
+  MODIFY `attempt_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
+-- Constraints for dumped tables
+--
+
+--
+-- Constraints for table `category_by_course`
+--
+ALTER TABLE `category_by_course`
+  ADD CONSTRAINT `category_by_course_ibfk_1` FOREIGN KEY (`cat_id`) REFERENCES `category` (`cat_id`),
+  ADD CONSTRAINT `category_by_course_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
+
+--
+-- Constraints for table `content`
+--
+ALTER TABLE `content`
+  ADD CONSTRAINT `content_ibfk_1` FOREIGN KEY (`content_index_id`) REFERENCES `content_index` (`content_index_id`);
+
+--
+-- Constraints for table `content_metadata`
+--
+ALTER TABLE `content_metadata`
+  ADD CONSTRAINT `content_metadata_ibfk_1` FOREIGN KEY (`content_id`) REFERENCES `content` (`content_id`);
+
+--
+-- Constraints for table `content_notes`
+--
+ALTER TABLE `content_notes`
+  ADD CONSTRAINT `content_notes_ibfk_1` FOREIGN KEY (`content_id`) REFERENCES `content` (`content_id`),
+  ADD CONSTRAINT `content_notes_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`);
+
+--
+-- Constraints for table `course_activity`
+--
+ALTER TABLE `course_activity`
+  ADD CONSTRAINT `course_activity_ibfk_1` FOREIGN KEY (`enrollment_id`) REFERENCES `user_course_enrollment` (`enrollment_id`);
+
+--
+-- Constraints for table `course_practice_set`
+--
+ALTER TABLE `course_practice_set`
+  ADD CONSTRAINT `course_practice_set_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
+  ADD CONSTRAINT `course_practice_set_ibfk_2` FOREIGN KEY (`practice_id`) REFERENCES `practice_set` (`practice_id`);
+
+--
+-- Constraints for table `course_progress`
+--
+ALTER TABLE `course_progress`
+  ADD CONSTRAINT `course_progress_ibfk_1` FOREIGN KEY (`enrollment_id`) REFERENCES `user_course_enrollment` (`enrollment_id`);
+
+--
+-- Constraints for table `daily_study_log`
+--
+ALTER TABLE `daily_study_log`
+  ADD CONSTRAINT `daily_study_log_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `daily_study_log_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
+
+--
+-- Constraints for table `quiz`
+--
+ALTER TABLE `quiz`
+  ADD CONSTRAINT `quiz_ibfk_1` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`),
+  ADD CONSTRAINT `quiz_ibfk_2` FOREIGN KEY (`cat_id`) REFERENCES `category` (`cat_id`);
+
+--
+-- Constraints for table `quiz_attempt`
+--
+ALTER TABLE `quiz_attempt`
+  ADD CONSTRAINT `quiz_attempt_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `quiz_attempt_ibfk_2` FOREIGN KEY (`quiz_id`) REFERENCES `quiz` (`quiz_id`);
+
+--
+-- Constraints for table `quiz_attempt_analysis`
+--
+ALTER TABLE `quiz_attempt_analysis`
+  ADD CONSTRAINT `quiz_attempt_analysis_ibfk_1` FOREIGN KEY (`attempt_id`) REFERENCES `quiz_attempt` (`attempt_id`);
+
+--
+-- Constraints for table `user_course_enrollment`
+--
+ALTER TABLE `user_course_enrollment`
+  ADD CONSTRAINT `user_course_enrollment_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `user_course_enrollment_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
+
+--
+-- Constraints for table `user_last_activity`
+--
+ALTER TABLE `user_last_activity`
+  ADD CONSTRAINT `user_last_activity_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`),
+  ADD CONSTRAINT `user_last_activity_ibfk_2` FOREIGN KEY (`course_id`) REFERENCES `course` (`course_id`);
+COMMIT;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

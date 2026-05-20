@@ -1,0 +1,1045 @@
+<?php
+
+require_once("../includes/config.php");
+////get access ASP details
+
+$access_asp = getAccessASP($_SESSION['asc_code'],$link1);
+	
+////////////// update by jitender on dec 11 for repair and bounce type call for claim process ////////////////////////////////////////
+if($_REQUEST['mobileno']){
+$srch_criteria = "where mobile = '".$_REQUEST['mobileno']."' ";
+}else if($_REQUEST['email_id']){
+$srch_criteria = "where email = '".$_REQUEST['email_id']."'";
+}else if($_REQUEST['customer_id']){
+$srch_criteria = "where customer_id = '".$_REQUEST['customer_id']."'";
+}else{
+$srch_criteria="";
+}
+$sql_cust	= mysqli_query($link1, "select  *  from customer_master   ".$srch_criteria."   order by id desc");
+
+$row_customer=mysqli_fetch_array($sql_cust);
+
+
+
+////// final submit form ////
+
+if($_POST['savejob']=='Save'){
+
+
+	@extract($_POST);
+
+	//// initialize transaction parameters
+
+	$flag = true;
+
+	mysqli_autocommit($link1, false);
+
+	$error_msg="";
+	
+		//////////////////////////////customer details//////////////////////////////////////////
+$usr_srch="select mobile from customer_master where mobile='".$phone1."'";
+$result_usr=mysqli_query($link1,$usr_srch);
+$arr_usr=mysqli_fetch_array($result_usr);	
+if ((mysqli_num_rows($result_usr)==0) ){	
+// also save customer details \\ 	
+$sel_uid="select max(max_id) from customer_master";
+$res_uid=mysqli_query($link1,$sel_uid);
+$arr_result2=mysqli_fetch_array($res_uid);
+$code_id=$arr_result2[0]+1;
+$pad=str_pad($code_id,5,"0",STR_PAD_LEFT);
+$customer_id="C".$stCode.$pad;
+
+	$usr_add="insert into customer_master set  customer_id='".$customer_id."', customer_name='".$customer_name."', address1='".$address."', pincode='".$pincode."', cityid='".$locationcity."', stateid='".$locationstate."', email='".$email."',  phone='".$res_no."', mobile='".$phone1."', alt_mobile='".$phone2."', update_date='".$today."', update_by='".$_SESSION['asc_code']."',max_id='".$code_id."',landmark='".$landmark."',type='".$customer_type."',reg_name='".$reg_name."',gst_no='".$gst_no."'";
+$res_add=mysqli_query($link1,$usr_add); 
+
+$cust_id=$customer_id;
+}else{
+	$cust_id=$custo_id;
+	}
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	//// pick max count of job
+
+	$res_jobcount = mysqli_query($link1,"SELECT job_count from job_counter where location_code='".$_SESSION['asc_code']."'");
+
+	$row_jobcount = mysqli_fetch_assoc($res_jobcount);
+
+	///// make job sequence
+
+	$nextjobno = $row_jobcount['job_count'] + 1;
+
+	$jobno = $_SESSION['userid']."".str_pad($nextjobno,4,0,STR_PAD_LEFT);
+
+	//// first update the job count
+
+	$res_upd = mysqli_query($link1,"UPDATE job_counter set job_count='".$nextjobno."' where location_code='".$_SESSION['asc_code']."'");
+
+	//// check if query is not executed
+
+	if (!$res_upd) {
+
+		 $flag = false;
+
+		 $error_msg = "Error details1: " . mysqli_error($link1) . ".";
+
+	}
+
+	///// entry in job sheet data
+
+	$modelsplit = explode("~",$modelid);
+if(is_array($voc2)){
+	$array_voc2 = implode(",", $voc2);
+}
+	///// model details
+if(is_array($acc_present)){
+	$array_accprest = implode(",", $acc_present);
+}
+if($_SESSION['id_type']=='ASP'){
+$st_asp=$_SESSION['asc_code'];
+}else{
+$st_asp=$rep_location;
+}
+
+	//// image upload//////////
+	//$folder1="imei_image";
+	$folder1="handset_image";
+	if(($_FILES['handset_img']["name"]!='') && ($_FILES["handset_img"]["size"] < 2000000)){
+		 $file_name =$_FILES['handset_img']['name'];
+		 $file_tmp =$_FILES['handset_img']['tmp_name'];
+		  $file_path="../".$folder1."/".time()."INV".$file_name;
+		 $img_upld1 = move_uploaded_file($file_tmp,$file_path);
+		 
+		 if($img_upld1 != ""){
+		//echo "INSERT INTO image_upload_details set job_no ='".$jobno."', activity='JOB CREATE',img_url='".$file_path."', upload_date='".$today."',location_code='".$_SESSION['asc_code']."'";
+		 	$result = mysqli_query($link1,"INSERT INTO image_upload_details set job_no ='".$jobno."', activity='JOB CREATE',img_url='".$file_path."', upload_date='".$today."',location_code='".$_SESSION['asc_code']."'");
+	  		//// check if query is not executed
+		 	if (!$result) {
+				$flag = false;
+				$error_msg = "Image Upload Problem: " . mysqli_error($link1) . ".";
+			}
+		 }else{
+		 	$flag = false;
+			$error_msg = "Invoice Image can not upload on server due to size or image type issue " . mysqli_error($link1) . ".";
+		 }
+	}
+$mappin="select location_code,area_type  from location_pincode_access where pincode='".$pincode."'";
+$result_pin=mysqli_query($link1,$mappin);
+$arr_pin=mysqli_fetch_array($result_pin);
+
+
+
+/*$job_sql=mysqli_query($link1,"SELECT * FROM jobsheet_data  where imei='".$imei_serial1."' and status in('1','2','3','4','5')");
+$job_det = mysqli_fetch_assoc($job_sql);
+
+if( mysqli_num_rows($job_sql)>0){
+
+$flag = false;
+$error_msg = "Complaint Already logged for this $imei_serial1 " . mysqli_error($link1) . ".";
+}
+*/
+
+		$st="status='1', sub_status='1'";
+
+	   $sql_inst = "INSERT INTO jobsheet_data set job_no='".$jobno."', system_date='".$today."', location_code='".$_SESSION['asc_code']."', city_id='".$locationcity."', state_id='".$locationstate."', pincode='".$pincode."', product_id='".$product_name."', brand_id='".$brand."', customer_type='".$customer_type."', model_id='".$modelsplit[0]."', partcode='".$modelpartcode['partcode']."', model='".$modelsplit[1]."', imei='".$imei_serial1."', open_date='".$today."', open_time='".$currtime."', warranty_status='".$warranty_status."',warranty_days='".$wsd."', dop='".$pop_date."', dname='".$dealer_name."', inv_no='".$invoice_no."',  call_type='Accessory Sale', call_for='Accessories Sale', customer_name='".$customer_name."',  contact_no='".$phone1."', alternate_no='".$phone2."', email='".$email."', address='".$address."', cust_problem='".$voc1."', cust_problem2='".$array_voc2."', cust_problem3='".$voc3."', phy_cond='".$physical_cond."', created_by='".$_SESSION['userid']."', remark='".$remark."', ".$st." ,ip='".$ip."',current_location='".$st_asp."',customer_id='".$cust_id."',entity_type='".$entity_type."',acc_rec='".$array_accprest."',area_type='".$arr_pin['area_type']."',pen_status='2'";
+
+	$res_inst = mysqli_query($link1,$sql_inst);
+	
+	//// check if query is not executed
+
+	if (!$res_inst) {
+
+		 $flag = false;
+
+		 $error_msg = "Error jobsheet : " . mysqli_error($link1) . ".";
+
+	}
+
+
+
+	
+	
+	
+	//// Product Register \\\\\
+		//echo "select * from product_registered where serial_no='$serial_no'<br />";
+
+    
+	///// entry in call/job  history
+
+	$flag = callHistory($jobno,$_SESSION['asc_code'],"1","Complaint Login","Complaint Login",$_SESSION['userid'],$warranty_status,$remark,"","",$ip,$link1,$flag);
+
+	////// insert in activity table////
+
+	$flag = dailyActivity($_SESSION['userid'],$jobno,"JOB","CREATE",$_SERVER['REMOTE_ADDR'],$link1,$flag);
+
+	///// check both master and data query are successfully executed
+
+	if ($flag) {
+
+		mysqli_commit($link1);
+
+		////// return message
+
+		$msg="You have successfully created a Job like <span class='red_small'> ".$jobno." </span> and Customer id is <span class='red_small'> ".$cust_id." </span>";
+
+		$cflag="success";
+
+		$cmsg="Success";
+
+	} else {
+
+		mysqli_rollback($link1);
+
+		$cflag="danger";
+
+		$cmsg="Failed";
+
+		$msg = "Request could not be processed. Please try again. ".$error_msg;
+
+	} 
+
+	mysqli_close($link1);
+
+   ///// move to parent page
+   if($phone1!=''){
+      //$sms_msg="Dear ".$customer_name.", thanks for visiting our store. Job  No. ".$jobno." Phonup.";
+}
+    
+
+
+ header("location:complaint_save_back.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav."&smsmsg=".$sms_msg."&mobileno=".$phone1."&customer_id=".$cust_id."&imei_serial=".$imei_serial1."&email_id=".$email."&status=1");
+	//exit;
+
+}
+
+////// get model details if post model id from previous page
+
+if($_REQUEST['p_modelcode'] || $_REQUEST['modelid']){
+
+	if($_REQUEST['modelid']){
+
+		$modelexpl = explode("~",$_REQUEST['modelid']);
+
+		$model_code = $modelexpl[0];
+
+		$model_name = $modelexpl[1];
+		$model_wp = $modelexpl[2];
+
+		$model_det = explode("~",getAnyDetails($modelexpl[0],"product_id,brand_id,model,make_doa,doa_days,out_warranty,wp","model_id","model_master",$link1));
+
+	}else{
+
+
+
+	}
+
+}
+//echo "SELECT * FROM product_registered  where serial_no='".$_REQUEST['imei_serial']."'";
+if($_REQUEST['imei_serial']){
+$product_det = mysqli_fetch_assoc(mysqli_query($link1,"SELECT * FROM product_registered  where serial_no='".$_REQUEST['imei_serial']."'"));
+}
+
+
+
+
+
+////// make voc array
+
+$voc_arr = array();
+
+$res_voc = mysqli_query($link1,"select voc_code, voc_desc from voc_master where 1");
+
+while($row_voc = mysqli_fetch_assoc($res_voc)){
+
+	$voc_arr[$row_voc['voc_code']] = $row_voc['voc_desc'];
+
+}
+
+//// calculate warranty
+$model_det3 = explode("~",getAnyDetails($product_det['model_id'],"product_id,brand_id,model,make_doa,doa_days,out_warranty,wp","model_id","model_master",$link1));
+
+if($product_det['purchase_date']!='' && $product_det['purchase_date']!='0000-00-00'){
+
+	$days_diff = daysDifference($today,$product_det['purchase_date']);
+
+	if($days_diff <= $model_det3[6]){
+
+		$ws = "IN";
+
+	}else{
+
+		$ws = "OUT";
+
+	}
+
+}else{
+	$ws = "";
+}
+
+?>
+
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+ <meta charset="utf-8">
+
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+
+ <title><?=siteTitle?></title>
+
+ <link rel="shortcut icon" href="../images/titleimg.png" type="image/png">
+
+ <script src="../js/jquery.js"></script>
+
+ <link href="../css/font-awesome.min.css" rel="stylesheet">
+
+ <link href="../css/abc.css" rel="stylesheet">
+
+ <script src="../js/bootstrap.min.js"></script>
+
+ <link href="../css/abc2.css" rel="stylesheet">
+
+ <link rel="stylesheet" href="../css/bootstrap.min.css">
+
+  <script>
+	$(document).ready(function(){
+        $("#frm1").validate();
+    });
+ </script>
+
+
+ <script language="javascript" type="text/javascript">
+
+ /////////// function to get city on the basis of state
+	
+ function get_citydiv(){
+
+	  var name=$('#locationstate').val();
+
+	  $.ajax({
+
+	    type:'post',
+
+
+		url:'../includes/getAzaxFields.php',
+
+		data:{state:name},
+
+		success:function(data){
+
+	    $('#citydiv').html(data);
+
+	    }
+
+	  });
+
+ }
+
+ /////////////
+
+ $(document).ready(function() {
+
+	$('#example-multiple-selected1').multiselect({
+
+			includeSelectAllOption: true,
+
+			enableFiltering: true,
+
+			buttonWidth:"200"
+
+            //enableFiltering: true
+
+	});
+
+	$('#example-multiple-selected2').multiselect({
+
+			includeSelectAllOption: true,
+
+			enableFiltering: true,
+
+			buttonWidth:"200"
+
+            //enableFiltering: true
+
+	});
+
+ });
+
+ /////////// function to get model on the basis of brand
+
+  $(document).ready(function(){
+
+	$('#brand').change(function(){
+
+	  var brandid=$('#brand').val();
+	   var product_name=document.getElementById("product_name").value;
+	  // alert(product_name);
+	 
+	  $.ajax({
+
+	    type:'post',
+
+		url:'../includes/getAzaxFields.php',
+
+		data:{brandModel:brandid,product_id:product_name},
+
+		success:function(data){
+
+	    $('#modeldiv').html(data);
+
+	    }
+
+	  });
+
+    });
+
+  });
+
+  /////////// function to check DOA is eligible or not
+
+  
+
+  /////////// function to get model on the basis of brand
+
+  function getAccessory(){
+
+	//$('#modelid').change(function(){
+
+	  var model_id=$('#modelid').val();
+
+	  var modelcode = model_id.split("~");
+	  
+	 
+
+	//  var calltype=$('#call_type').val();
+	  
+	  $.ajax({
+
+	    type:'post',
+
+		url:'../includes/getAzaxFields.php',
+
+		data:{model:modelcode[0]},
+
+		success:function(data){
+		
+
+	    $('#accdiv').html(data);
+
+		$('#example-multiple-selected2').multiselect({
+
+			includeSelectAllOption: true,
+
+			enableFiltering: true,
+
+			buttonWidth:"200"
+
+	    });
+
+	    }
+
+	  });
+
+    //});
+
+  }
+
+//// check warrantty on the basis of els status and pop selection
+
+
+
+	 function getmaploc(){
+	
+	  var pincode=$('#pincode').val();
+	
+	
+	  $.ajax({
+	    type:'post',
+		url:'../includes/getAzaxFields.php',
+		data:{Locpin:pincode},
+		success:function(data){
+	
+	    $('#loc_pincode').html(data);
+	    }
+	  });
+	
+	};
+
+	
+
+	
+
+
+
+//// date difference
+
+function date_difference(enddate,startdate){
+
+	var end_date = (enddate).split("-");
+
+	var start_date = (startdate).split("-");	
+
+	var oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+
+	var firstDate = new Date(start_date[0], start_date[1], start_date[2]);
+
+	var secondDate = new Date(end_date[0], end_date[1], end_date[2]);
+
+	/////calculate days
+
+	var diffDays = Math.round(Math.abs((firstDate.getTime() - secondDate.getTime()) / (oneDay)));
+
+	return diffDays;
+
+}
+
+  </script>
+
+ <script type="text/javascript" src="../js/jquery.validate.js"></script>
+
+ <script type="text/javascript" src="../js/common_js.js"></script>
+
+  <!-- Include Date Picker -->
+
+ <link rel="stylesheet" href="../css/datepicker.css">
+
+ <script src="../js/bootstrap-datepicker.js"></script>
+
+ <!-- Include multiselect -->
+
+ <script type="text/javascript" src="../js/bootstrap-multiselect.js"></script>
+
+ <link rel="stylesheet" href="../css/bootstrap-multiselect.css" type="text/css"/>
+
+ <style type="text/css">
+
+ .custom_label {
+
+	 text-align:left;
+
+	 vertical-align:middle
+
+ }
+
+ </style>
+
+<body  onLoad="getmaploc(<?=$row_customer['pincode']?>)">
+
+<div class="container-fluid">
+
+  <div class="row content">
+
+	<?php 
+
+    include("../includes/leftnavemp2.php");
+
+    ?>
+
+    <div class="<?=$screenwidth?>">
+
+      <h2 align="center"><i class="fa fa-id-badge"></i> Enter Accessory Details</h2>
+
+      <?php if($model_det[5]=="Y"){ ?>
+      <h4 align="center" style="color:#F00">You are making a Complaint for OUT warranty model .</h4> 
+      <?php } ?>
+
+		<form  name="frm1" id="frm1" class="form-horizontal" enctype="multipart/form-data"  action="" method="post">
+
+        <div class="panel-group">
+
+            <div class="panel panel-info">
+
+              <div class="panel-heading"><i class="fa fa-id-card fa-lg"></i>&nbsp;&nbsp;Customer Details</div>
+
+              <div class="panel-body">
+
+              	  <div class="form-group">
+              	    <div class="col-md-6">
+              	      <label class="col-md-6 custom_label">Customer Category <span class="red_small">*</span></label>
+                      <div class="col-md-6">
+                        <select name="customer_type" id="customer_type" class="form-control required" required>
+                         
+                          <?php
+
+
+
+				$cus_query="SELECT * FROM customer_type where status = '1' order by customer_type";
+
+
+
+				$check_cust=mysqli_query($link1,$cus_query);
+
+
+if($row_customer['type']==""){?>
+ <option value="">--Please Select--</option>
+			<?php	while($br_cust = mysqli_fetch_array($check_cust)){
+
+
+
+				?>
+                          <option value="<?=$br_cust['customer_type']?>"<?php if($row_customer['type']==$br_cust['customer_type']){ echo "selected";}?>><?php echo $br_cust['customer_type']?></option>
+                          <?php }} else{?>
+						   <option value="<?=$row_customer['type']?>"><?php echo $row_customer['type']?></option><?php }?>
+                        </select>
+                      </div>
+           	        </div>
+              	    <div class="col-md-6"><label class="col-md-6 custom_label">Pincode <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+  <input name="pincode" type="text" class="digits form-control required"  <?php if($_SESSION['id_type']=='CC'){?>  onKeyup="getmaploc(this.value);"<?php }?>maxlength="6" id="pincode" value="<?=$row_customer['pincode']?>" <?php if($row_customer['pincode']!=''){?> readonly <?php }else{}?>>
+                      </div>
+
+                    </div>
+
+                </div>
+
+                  <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Customer Name <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                      	<input name="customer_name" id="customer_name" type="text" value="<?=$row_customer['customer_name'];?>" class="form-control required" <?php if($row_customer['customer_name']!=''){?> readonly <?php }else{}?>/>
+						<input name="custo_id" id="custo_id" type="hidden" value="<?=$row_customer['customer_id'];?>" class="form-control required"/>
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Address <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                        <textarea name="address" id="address" required class="form-control" onkeypress = " return ( (event.keyCode ? event.keyCode : event.which ? event.which : event.charCode)!= 13);"  onContextMenu="return false" style="resize:vertical" <?php if($row_customer['address1']!=''){?> readonly <?php }else{}?>><?=$row_customer['address1'];?></textarea>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+				                    <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Landmark </label>
+
+                      <div class="col-md-6">
+
+                        	<input name="landmark" id="landmark" type="text" class="form-control " value="<?=$row_customer['landmark'];?>" <?php if($row_customer['customer_name']!=''){?> readonly <?php }else{}?> /> 
+
+                      </div>
+
+                    </div>
+
+                   <div class="col-md-6"><label class="col-md-6 custom_label">Assign Location  <span class="red_small">*</span> </label>
+
+                      <div class="col-md-6" id="loc_pincode">
+
+                            
+							  
+							   <select name="rep_location" id="rep_location" class="form-control required " required>
+ 
+ <?php if($_SESSION['id_type']=='CC'){?>
+                        <option value="">--Please Select--</option>
+                        <?php
+                        $lctype_query="select location_code,locationname  from location_master where statusid='1' and location_code in  (".$access_asp.")  order by locationname";
+                        $check_lctype=mysqli_query($link1,$lctype_query);
+                        while($br_lctype = mysqli_fetch_array($check_lctype)){
+                        ?>
+                        <option value="<?=$br_lctype['location_code']?>"><?php echo $br_lctype['locationname']?></option>
+                        <?php } }else {?>
+						
+						 <option value="<?=$_SESSION['asc_code']?>"><?php echo $_SESSION['uname']?></option><?php }?>
+						
+                      </select>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                   <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Contact No. <!--<span class="small">(For SMS Update)</span>--> <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                        <input name="phone1" type="text" class="digits required form-control" required id="phone1" maxlength="10" onKeyPress="return onlyNumbers(this.value);" onBlur="return phoneN();" value="<?php if($row_customer['mobile']!=''){ echo $row_customer['mobile'];}else{ echo $_REQUEST['mobileno'];}?>" <?php if($row_customer['mobile']!=''){?> readonly <?php }else{}?>>
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Alternate Contact No.</label>
+
+                      <div class="col-md-6">
+
+                      <input name="phone2" type="text" class="digits form-control " id="phone2" maxlength="10" value="<?=$row_customer['alt_mobile'];?>" <?php if($row_customer['alt_mobile']!=''){?> readonly <?php }else{}?>>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">State <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                         <select name="locationstate" id="locationstate" class="form-control required"  onchange="get_citydiv();" required <?php if($row_customer['stateid']!=''){?> readonly <?php }else{}?>>
+
+                          <option value=''>--Please Select--</option>
+
+                          <?php 
+
+						 $state_query="select stateid, state from state_master where countryid='1' order by state";
+
+						 $state_res=mysqli_query($link1,$state_query);
+
+						 while($row_res = mysqli_fetch_array($state_res)){?>
+
+						   <option value="<?=$row_res['stateid']?>"<?php if($row_customer['stateid']==$row_res['stateid']){ echo "selected";}?>><?=$row_res['state']?></option>
+
+						 <?php }?> 	
+
+                        </select>               
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Email</label>
+
+                      <div class="col-md-6">
+
+                          <input name="email" type="email" class="email form-control" id="email" value="<?=$row_customer['email'];?>"  <?php if($row_customer['email']!=''){?> readonly <?php }else{}?>>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+                  <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">City <span class="red_small">*</span></label>
+
+                        <div class="col-md-6" id="citydiv">
+
+                       <select name="locationcity" id="locationcity" class="form-control required" required <?php if($row_customer['cityid']!=''){?> readonly <?php }else{}?>>
+
+                       <option value=''>--Please Select-</option>
+
+                       <?php 
+
+					  
+
+						 $city_query="SELECT cityid, city FROM city_master where stateid='".$row_customer['stateid']."' and cityid='".$row_customer['cityid']."'";
+
+						 $city_res=mysqli_query($link1,$city_query);
+
+						 while($row_city = mysqli_fetch_array($city_res)){
+
+						?>
+
+						<option value="<?=$row_city['cityid']?>"<?php if($row_customer['cityid']==$row_city['cityid']){ echo "selected";}?>><?=$row_city['city']?></option>
+
+						<?php }
+
+					
+
+						?>
+
+                       </select>
+
+                      </div>
+
+                    </div>
+
+                   <div class="col-md-6"><label class="col-md-6 custom_label">Residence No.</label>
+
+                      <div class="col-md-6">
+
+                        <input name="res_no" type="text" class="digits form-control" id="res_no" value="<?=$row_customer['phone']?>"  <?php if($row_customer['cityid']!=''){?> readonly <?php }else{}?>>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+				  
+ <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">GST No.</label>
+
+                        <div class="col-md-6" id="citydiv">
+
+                         <input name="gst_no" type="text" class=" form-control" id="gst_no" value="<?=$row_customer['gst_no']?>"  <?php if($row_customer['gst_no']!=''){?> readonly <?php }else{}?>>
+                      </div>
+
+                    </div>
+
+                   <div class="col-md-6"><label class="col-md-6 custom_label">Registration Name.</label>
+
+                      <div class="col-md-6">
+
+                        <input name="reg_name" type="text" class=" form-control" id="reg_name" value="<?=$row_customer['reg_name']?>"  <?php if($row_customer['reg_name']!=''){?> readonly <?php }else{}?>>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+              </div>
+
+            </div>
+
+        
+
+            <div class="panel panel-info">
+
+              <div class="panel-heading"><i class="fa fa-desktop fa-lg"></i>&nbsp;&nbsp;Product Details</div>
+
+              <div class="panel-body">
+
+              	<div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Product <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                         <select name="product_name" id="product_name" class="form-control required" required>
+
+                        
+
+                          <?php
+						  if($product_det['product_id']==''){?>
+						    <option value=''>--Select Product--</option>
+
+							<?php $dept_query="SELECT * FROM product_master where status = '1'  order by product_name";
+
+							$check_dept=mysqli_query($link1,$dept_query);
+
+							while($br_dept = mysqli_fetch_array($check_dept)){
+
+						  ?>
+
+						  <option value="<?=$br_dept['product_id']?>"<?php if($sel_product == $br_dept['product_id']){ echo "selected";}?>><?php echo $br_dept['product_name']?></option>
+
+						<?php }} else {?>	
+                              <option value='<?=$product_det['product_id']?>'><?=getAnyDetails($product_det['product_id'],"product_name","product_id","product_master",$link1);?></option>
+							  <?php }?>
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Brand <span class="red_small">*</span></label>
+
+                      <div class="col-md-6">
+
+                       <select name="brand" id="brand" class="form-control required" required>
+
+                        <?php  if($product_det['brand_id']==''){?>
+						    <option value=''>--Select Product--</option>
+                          <?php
+
+						  	
+
+							$dept_query="SELECT * FROM brand_master where status = '1'  order by brand";
+
+							$check_dept=mysqli_query($link1,$dept_query);
+
+							while($br_dept = mysqli_fetch_array($check_dept)){
+
+						  ?>
+
+						  <option value="<?=$br_dept['brand_id']?>"<?php if($sel_brand == $br_dept['brand_id']){ echo "selected";}?>><?php echo $br_dept['brand']?></option>
+
+						<?php }} else {?>	
+                              <option value='<?=$product_det['brand_id']?>'><?=getAnyDetails($product_det['brand_id'],"brand","brand_id","brand_master",$link1);?></option>
+							  <?php }?>
+
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                  </div>
+
+              	<div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Model <span class="red_small">*</span></label>
+
+                      <div class="col-md-6" id="modeldiv">
+
+                        <select name="modelid" id="modelid" class="form-control required" required>
+
+                          <?php
+
+						  	if($product_det['model_id']!=""){
+							$model_det2 = explode("~",getAnyDetails($product_det['model_id'],"product_id,brand_id,model,make_doa,doa_days,out_warranty,wp","model_id","model_master",$link1));
+
+						  ?>
+
+                          <option value="<?=$product_det['model_id']."~".$model_det2['2'];?>"><?=$model_det2['2']?></option>
+
+						  <?php
+
+							}else if($_REQUEST['p_modelcode'] || $_REQUEST['modelid']){
+
+						  ?>
+                                        <option value=''>--Select Model--</option>
+                          <option value="<?=$model_code."~".$model_name;?>"><?=$model_det[2]?></option>
+
+                          <?php }else{?>
+
+                          <option value=''>--Select Model--</option>
+
+                          <?php } ?>
+
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label"><?php echo SERIALNO ?></label>
+
+                      <div class="col-md-6" >
+
+	<input name="imei_serial1" id="imei_serial1" type="text" value="<?=$_REQUEST['imei_serial']?>" class="form-control  "  />
+                      </div>
+
+                    </div>
+
+                  </div>
+
+
+
+				  
+				  	   <div class="form-group">
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Entity Name </label>
+
+                      <div class="col-md-6">
+
+                        <select name="entity_type" id="entity_type" class="form-control required" required>
+                          <option value="Others">Others</option>
+                          <?php
+
+
+
+				$enty_query="SELECT * FROM entity_type where status_id = '1' order by name";
+
+
+
+				$check_enty=mysqli_query($link1,$enty_query);
+
+
+
+				while($br_entity = mysqli_fetch_array($check_enty)){
+
+
+
+				?>
+                          <option value="<?=$br_entity['id']?>"<?php if($_REQUEST['entity_type']==$br_entity['id']){ echo "selected";}?>><?php echo $br_entity['name']?></option>
+                          <?php }?>
+                        </select>
+
+                      </div>
+
+                    </div>
+
+                    <div class="col-md-6"><label class="col-md-6 custom_label">Accessory Required</label>
+
+                      <div class="col-md-6" id="accdiv">
+
+                       <select name="acc_present[]" id="example-multiple-selected2" multiple="multiple" class="form-control">
+						<?php $acc_part = mysqli_fetch_assoc(mysqli_query($link1,"select partcode,part_name from partcode_master where model_id='".$model_code."' and part_category='ACCESSORY' and status='1'"));
+
+							while($br_acc = mysqli_fetch_array($acc_part)){
+
+						  ?>
+<option value="<?=$br_acc['part_name']?>"><?php echo $br_acc['part_name']?></option>
+
+						<?php }?>
+                        </select>
+                      </div>
+
+                    </div>
+
+                  </div> 
+
+              </div>
+
+            </div>
+            
+
+            
+            
+            
+            
+            
+            
+
+            <div class="panel panel-info">
+
+              <div class="panel-heading"><i class="fa fa-pencil-square-o fa-lg"></i></div>
+
+              <div class="panel-body">
+
+
+
+
+                
+
+		  <!------------- End Image Uploder --------------->
+                  <div class="form-group">
+
+                    <div class="col-md-12" align="center">
+
+                      <span id="errmsg" class="red_small"></span>
+
+                      <input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='complaint_create.php?<?=$pagenav?>'">&nbsp;
+						<input name="wsd" id="wsd" value="<?=$_REQUEST['p_wsd'];?>" type="hidden"/>
+                      <input name="ticketno" id="ticketno" value="<?=base64_encode($ticket_det['ticket_no']);?>" type="hidden"/>
+                      <input name="day_diff" id="day_diff" value="<?=$days_diference;?>" type="hidden"/>
+                      
+                      <input name="symptom" id="symptom" value="<?=$count['symp_code']?>" type="hidden"/>
+
+                      <input type="submit" class="btn<?=$btncolor?>" name="savejob" id="savejob" value="Save" title="Save Job Details" <?php if($_POST['savejob']=='Save'){?>disabled<?php }?>>&nbsp;
+
+                    </div>
+
+                  </div> 
+
+              </div>
+
+            </div><!-- end panal-->
+
+        </div><!-- end panal group-->
+
+        </form>
+
+    </div><!--End col-sm-9-->
+
+  </div><!--End row content-->
+
+</div><!--End container fluid-->
+
+<?php
+
+include("../includes/footer.php");
+
+include("../includes/connection_close.php");
+
+?>
+
+</body>
+
+</html>

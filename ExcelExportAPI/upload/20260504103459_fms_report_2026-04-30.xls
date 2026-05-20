@@ -1,0 +1,6 @@
+
+<table width="100%" border="1" cellpadding="5" cellspacing="0">
+    <tr style="background-color: green;color: white">
+    <th>booking location</th><th>booking date</th><th>booking out date</th>    </tr>
+</table>
+

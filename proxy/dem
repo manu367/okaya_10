@@ -1,0 +1,40 @@
+User(id , uuid , name , email , phone , pass_hash ,status,status_id,create_at)
+userPassword(uup_id,u_id,pass,creaeAT, upateAt,changeby[email , google , otp]);
+role(role_id,role_type)
+status(s_id,statusname[active , inactive])
+user_roles(uur_id , u_id,r_id);
+lastlogin_user(id, u_id , ip , type[android , web],login,logout)
+
+// Read
+User_Purchae()
+UserCourse()
+User_Notes(un_id , course_id , content_id , video_id, position_id[yha id aayege element ke] )
+User_PracticeSet()
+User_Quiz()
+User_QuizAttempt()
+User_Performance()
+UserMarkes()
+
+
+// Convert user to Another
+location_user(lu_id , u_id , type[inscr])
+location_inst_user()
+location_inst_user_permission(locationuserid,permission);
+
+Add Cource , Content, Quiz , Practice set and more
+
+// Write
+
+
+--------| CMS |------
+Course
+CourseMEta_data
+Course_data
+Coure_Analysis
+COurse_Enrolled_access
+
+ContentIndex(id , index)
+CourseContent(id , title , content)
+CourseIndex_Content(cc_id , index_id , content_id)
+                   = 1 , 1 , blog
+                   = 1 , 1 , video

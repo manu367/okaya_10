@@ -1,0 +1,12 @@
+# Dependencies
+/vendor/
+/node_modules/
+
+# Archives
+*.zip
+
+# SQL files
+*.sql
+
+# JSON files
+*.json

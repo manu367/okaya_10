@@ -1,0 +1,49 @@
+/* Global CSS Start */
+body { padding:0px; margin:0px;font-family:Arial, Helvetica, sans-serif; font-size:12px; background:url(../images/bg.gif)0 0 repeat-x #235587;  }
+form, h1, h2, h3 { padding:0px; margin:0px; }
+input { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#47596C; }
+/* Global CSS End*/
+
+/* text classes start */
+.txt11 { font-size:11px; }
+.white12 { color:#FFFFFF; }
+.blue12 { color:#1B5B9C; }
+.black12 { color:#282A2C; }
+
+/* text classes end */
+
+/* Links classes start */
+a, a:visited { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#1B5B9C; text-decoration:none; } 
+a:hover { text-decoration:underline; } 
+
+.tabs:link, .tabs:visited { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#ffffff; text-decoration:none; font-weight:bold; display:block; padding:10px 17px; border-left: 1px solid #4A4C4C; }
+.tabs:hover { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#ffffff; text-decoration:none; font-weight:bold; display:block; padding:10px 17px; background-color:#F06E18; border-left: 1px solid #4A4C4C; }
+
+.sidelinks:link, .sidelinks:visited { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#1B5B9C; text-decoration:none; font-weight:bold; display:block; background-color:#F6F7F9; border-bottom:1px solid #DDE1E4; padding:4px 10px;}
+.sidelinks:hover { font-family:Arial, Helvetica, sans-serif; font-size:12px; color:#1B5B9C; text-decoration:none; font-weight:bold; display:block; background-color:#E4E7EC; border-bottom:1px solid #DDE1E4; padding:4px 10px;}
+/* Links classes end */
+
+/* padding classes start */
+.padboth14 { padding-left:14px; padding-right:14px; }
+.padboth10 { padding-left:10px; padding-right:10px; }
+.pad10 { padding:10px; }
+.pad5 { padding:5px; }
+.padTB5 { padding-top:5px; padding-bottom:5px; }
+.padlt5 { padding-left:5px; }
+.padrt10 { padding-right:10px; }
+/* padding classes end */
+
+/* background classes start */
+.topbg { background:url(../images/topbg.gif) 0 0 repeat-x #235587; height:78px; }
+.footerbg { background:url(../images/footerbg.gif) 0 0 repeat-x #1B1F23; color:#ffffff; }
+.footerbg a, .footerbg a:visited { color:#ffffff; text-decoration:none; }
+.footerbg a:hover { color:#ffffff; text-decoration:underline; }
+
+.tabsbg { background:url(../images/tabsbg.gif) repeat-x; }
+/* background classes end */
+
+/* borders classes start */
+.imgwt { border:4px solid #fff; }
+.borderboth { border-left:1px solid #DDE1E4; border-right:1px solid #DDE1E4; }
+.brdrbtm { border-bottom:1px solid #DDE1E4; }
+/* borders classes end */

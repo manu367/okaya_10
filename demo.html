@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<form id="rangeForm">
+    <input type="date" name="start">
+    <input type="date" name="end">
+</form>
+
+<script>
+    const data = new FormData(document.getElementById("rangeForm"));
+    console.log(data.get("start"), data.get("end"));
+</script>
+       console.log(range);  // e.g., "01/01/2025 - 01/10/2025"
+    });
+</script>
+
+</body>
+</html>

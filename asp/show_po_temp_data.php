@@ -1,0 +1,260 @@
+<?php
+error_reporting(E_All);
+require_once("../includes/config.php");
+
+/////get status//
+@extract($_POST);
+$browserid=session_id();
+	//////  if we want to Add new po
+   if ($_POST['upd']=='Process'){
+   ////// INITIALIZE PARAMETER/////////////////////////
+   	mysqli_autocommit($link1, false);
+	$flag = true;
+	$error_msg = "";
+ 
+    
+
+							   //// Make System generated PO no.//////
+							    	$locinfo= mysqli_fetch_array(mysqli_query($link1,"select locationaddress,stateid from location_master where location_code='".$_POST['to_location']."' "));
+									   	$fromaddress = explode ("~" ,getAnyDetails($_SESSION['asc_code'],"locationaddress,stateid","location_code","location_master",$link1));
+
+	$res_po=mysqli_query($link1,"select max(po_id) as no from po_master where from_code='".$_SESSION['asc_code']."'");
+
+	$row_po=mysqli_fetch_array($res_po);
+
+	$c_nos=$row_po['no']+1;
+$po_no=$_SESSION['asc_code']."".$todayt."PO".$c_nos; 
+	//$po_no=$_SESSION['asc_code']."PO".$c_nos; 
+								
+   
+	//////////////////
+
+   	$usr_add="INSERT INTO po_master set po_no='".$po_no."', po_date='".$today."' , to_code ='".$_POST['to_location']."' , to_address='".$locinfo['locationaddress']."' ,to_state='".$locinfo['stateid']."',potype='PO', update_date='".$today."',entry_by='".$_SESSION['userid']."' ,entry_ip ='".$_SERVER['REMOTE_ADDR']."' ,status='1' ,from_code= '".$_SESSION['asc_code']."', from_address = '".$fromaddress[0]."' ,po_id='".$c_nos."' , 	from_state = '".$fromaddress[1]."'  ";
+
+    $result=mysqli_query($link1,$usr_add);
+		//// check if query is not executed
+
+	if (!$result) {
+
+	     $flag = false;
+
+         $err_msg= "Error details1: " . mysqli_error($link1) . ".";
+
+    }
+	//////////////////////////////////////////
+///// Insert in item data by picking each data row one by one
+		       $data_tem1="select partcode,qty,price,challan_no,value,barnd_id,product_id  from temp_disp_upd where userid='".$_SESSION['userid']."' and browserid='".$browserid."'";							
+								$data_tem_reus=mysqli_query($link1,$data_tem1);
+								while($data_tem_item=mysqli_fetch_assoc($data_tem_reus)){   
+	    	// checking row value of product and qty should not be blank
+				$partdet = explode("~",getAnyDetails($data_tem_item['partcode'] , "hsn_code,part_name,product_id,brand_id,model_id" ,"partcode", "partcode_master" ,$link1));
+			if($data_tem_item['partcode']!='' && $data_tem_item['qty']!='') {
+			
+					/////////// insert data
+
+	   $query2="insert into po_items set  po_id ='".$poid['po_id']."' , po_no='".$po_no."',product_id ='".$data_tem_item['product_id']."', brand_id ='".$data_tem_item['barnd_id']."', model_id ='".$partdet[4]."', partcode ='".$data_tem_item['partcode']."',type = 'PO', qty='".$data_tem_item['qty']."' , update_date= '".$today."' ,status='1'";
+
+		   $result = mysqli_query($link1, $query2);
+
+		   //// check if query is not executed
+
+		   if (!$result) {
+
+	           $flag = false;
+
+               $err_msg= "Error details2: " . mysqli_error($link1) . ".";
+
+           }
+		   	/////////// insert  BILLING PRODUCT data
+		  
+  
+			}// close if loop of checking row value of product and qty challan
+			
+			 else {
+			    $flag = false;
+				$error_msg = "Challan partcode condistion check ".$data_row1['challan_no'];
+			       }// close if loop of checking row value of product and qty should not be blank
+
+		
+		}/// close for loop
+		
+	////// insert in activity table////
+
+    $flag = dailyActivity($_SESSION['userid'], $po_no, "PO", "ADD", $ip, $link1, $flag);
+		///// check both master and data query are successfully executed
+$result_temp=mysqli_query($link1,"delete from temp_disp_upd where userid='".$_SESSION['userid']."' and browserid='".$browserid."'");
+					//// check if query is not executed
+						if (!$result_temp) {
+	 		 		   $flag = false;
+       				   $error_msg = "temp data not delete: " . mysqli_error($link1) . ".";
+   						 }
+					 			
+                             
+   if ($flag) {
+        	mysqli_commit($link1);
+			$cflag = "success";
+			$cmsg = "Success";
+        	$msg = "Purchase Order is successfully placed with ref. no.".$po_no;
+    	} else {
+		
+			mysqli_rollback($link1);
+			$cflag = "danger";
+			$cmsg = "Failed";
+			$msg = "Request could not be processed. Please try again." .$error_msg ;
+			mysqli_autocommit($link1, true);
+			$result_temp=mysqli_query($link1,"delete from temp_disp_upd where userid='".$_SESSION['userid']."' and browserid='".$browserid."'");
+			
+		} 
+		
+    	mysqli_close($link1);
+	   	///// move to parent page
+  		header("location:inventory_po.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+		exit;
+   
+   }
+   //// if user hit cancel button
+	if($_POST['cancel']=='Cancel'){
+	mysqli_autocommit( $link1, false);
+	$flag = true;
+	$err_msg="";
+	$result=mysqli_query($link1,"delete from temp_disp_upd where  userid='".$_SESSION['userid']."' and browserid='".$browserid."'");
+	//// check if query is not executed
+	if (!$result) {
+	     $flag = false;
+         $err_msg = "Temp data not delete:";
+	}
+	///// check both master and data query are successfully executed
+	if ($flag) {
+        mysqli_commit($link1);
+		$cflag = "success";
+		$cmsg = "Success";
+        $msg = "All Excel Uploaded Data has been deleted.";
+    } else {
+		mysqli_rollback($link1);
+		$cflag = "danger";
+		$cmsg = "Failed";
+		$msg = "Request could not be processed ".$err_msg.". Please try again.";
+	}
+	mysqli_close($link1);
+	///// move to parent page
+	header("location:inventory_po.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+  
+    exit;
+	}
+?>
+<!DOCTYPE html>
+<html>
+<head>
+ <meta charset="utf-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title><?=siteTitle?></title>
+ <script src="../js/jquery.js"></script>
+ <link href="../css/font-awesome.min.css" rel="stylesheet">
+ <link href="../css/abc.css" rel="stylesheet">
+ <script src="../js/bootstrap.min.js"></script>
+ <link href="../css/abc2.css" rel="stylesheet">
+ <link rel="stylesheet" href="../css/bootstrap.min.css">
+<!-- datatable plugin-->
+ <link rel="stylesheet" href="../css/jquery.dataTables.min.css">
+ <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
+ <script type="text/javascript">
+	$(document).ready(function(){
+		$("#frm2").validate();
+	});
+	$(document).ready(function(){
+    
+	///// Search Show and Remove (use true and false)
+		$('#myTable').dataTable( {
+		  "searching": false
+		} );
+	});	
+ </script>
+ 
+<script type="text/javascript" src="../js/jquery.validate.js"></script>
+<script src="../js/common_js.js"></script>
+
+
+</head>
+<body>
+	<div class="container-fluid">
+ 		<div class="row content">
+		<?php 
+    	include("../includes/leftnavemp2.php");
+    	?>
+   		<div class="<?=$screenwidth?> tab-pane fade in active">
+      		
+   			<div class="panel-group">
+			  
+		 <h2 align="center"><i class="fa fa-upload"></i>  Purchase Order  Details</h2>
+      <h4 align="center" style="color:#060">Step 1 is completed (Excel file is uploaded) .</h4>
+      <h4 align="center" style="color:#FF9900">Step 2 Please Go for next process or cancel uploaded data.</h4>
+      <h4 align="center" style="color:#FF0000">Do Not Refersh while process is being execute.</h4>
+	  <?php if($_REQUEST['msg']){?>
+        <div class="alert alert-<?=$_REQUEST['chkflag']?> alert-dismissible" role="alert">
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+          </button>
+            <strong><?=$_REQUEST['chkmsg']?>!</strong>&nbsp;&nbsp;<?=$_REQUEST['msg']?>.
+        </div>
+        <?php }?>
+   			<form id="frm2" name="frm2" class="form-horizontal" action="" method="post">
+    			<div class="panel panel-info table-responsive">
+    			<div class="panel panel-info table-responsive">
+      				<div class="panel-heading">Uploded Information</div>
+      					<div class="panel-body">
+       						<table class="table table-bordered" width="100%"  id="myTable">
+            					<thead>
+                                	<tr class="<?=$tableheadcolor?>"> 
+              							<td width="4%">S.No</td>
+										<td width="20%">From Location Name</td>
+                                        <td width="20%">To Location </td>
+              							<td width="20%">Partcode Name</td>
+                                        <td width="6%">Qty</td>
+                                        <td width="10%">Price</td>
+                                    
+            						</tr>
+            					</thead>
+            					<tbody>
+            					<?php
+								$i=1;
+								$data_sql="select challan_no,from_location,to_location,partcode,qty,price from temp_disp_upd where userid='".$_SESSION['userid']."' and browserid='".$browserid."'";
+								$data_res=mysqli_query($link1,$data_sql);
+								while($data_row=mysqli_fetch_assoc($data_res)){
+								?>
+              						<tr><input type="hidden" name="challan_no" id="challan_no" class="form-control" value="<?php echo $data_row['challan_no']; ?>"  readonly/>
+                						<td><?=$i?></td>
+									<td><?php echo getAnyDetails($data_row["from_location"],"locationname","location_code","location_master",$link1)."(".$data_row['from_location'].")";?> <input type="hidden" name="from_location" id="from_location" class="form-control" value="<?php echo $data_row["from_location"]; ?>"  readonly/></td>
+										<td><?php echo getAnyDetails($data_row["to_location"],"locationname","location_code","location_master",$link1)."(".$data_row['to_location'].")";?> <input type="hidden" name="to_location" id="to_location" class="form-control" value="<?php echo $data_row["to_location"]; ?>"  readonly/></td>
+                						<td ><?php echo getAnyDetails($data_row["partcode"],"part_name","partcode","partcode_master",$link1)."(".$data_row['partcode'].")";?></td>
+              							<td><?php echo $data_row['qty']; ?></td>
+              							
+              							<td><?php echo $data_row['price']; ?></td>   
+									
+                					</tr>
+            					<?php
+									//$total+= $data_row['total_cost'];
+									$i++;
+								}
+								?>
+                                   
+              				
+            					</tbody>
+          					</table>
+							<div style="text-align:center;"><input type="submit" class="btn btn-success" name="upd" id="upd" value="Process" title="Process">&nbsp;
+                                       
+                   							<input type="submit" class="btn btn-danger" name="cancel" id="cancel" value="Cancel" title="Cancel Uploaded Data" onClick="return myConfirm();"></div>
+      					</div><!--close panel body-->
+			          </div><!--close panel-->
+    				</form>
+  				</div><!--close panel group-->
+ 			</div><!--close col-sm-9-->
+		</div><!--close row content-->
+	</div><!--close container-fluid-->
+
+<?php
+include("../includes/footer.php");
+include("../includes/connection_close.php");
+?>
+</body>
+</html>
+

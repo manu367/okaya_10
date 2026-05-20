@@ -1,0 +1,1476 @@
+<?php
+require_once("../includes/config.php");
+//$arrstatus = getFullStatus("process",$link1);
+$docid=base64_decode($_REQUEST['refid']);
+
+$updateDate = $today." ".$currtime;
+
+//// job details
+$job_sql="SELECT * FROM jobsheet_data where job_no='".$docid."'";
+$job_res=mysqli_query($link1,$job_sql);
+$job_row=mysqli_fetch_assoc($job_res);
+$doa_sql="SELECT * FROM doa_data where job_no='".$docid."'";
+$doa_res=mysqli_query($link1,$doa_sql);
+$doa_row=mysqli_fetch_assoc($doa_res);
+
+$image_det1 = mysqli_query($link1, "SELECT * FROM dop_serial_change_request  where old_job_no = '".$docid."' order by id DESC ");
+$dop_serial_change_row=mysqli_fetch_assoc($image_det1);
+
+@extract($_POST);
+////// if we hit process button
+if ($_POST) {
+	if ($_POST['update'] == 'Update') {
+		mysqli_autocommit($link1, false);
+		$flag = true;
+		$err_msg = "";
+		$currtime=date("H:i:s");
+
+		/*if(($delivery_otp != $job_row['btr_del_code']) && $delivery_otp != "" && $job_row['btr_del_code'] != ""){
+			$flag = false;
+			$err_msg = "Delivery & Pickup OTP is not correct. Please try again.";
+			///// move to parent page
+			header("location:job_list_repl_btr_sr_loc.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+			exit;
+		}else{*/
+
+		/**********************************************************************************
+		if($sold_unsold=="Unsold"){
+
+			$jobsheet_upd = mysqli_query($link1,"UPDATE jobsheet_data set status='10', sub_status  = '10', l3_status='10', close_date='".$today."', close_time='".$currtime."', pen_status = '6', ext14 = 'Replaced Without Serial no', repl_platform='ASP'  where job_no='".$docid."' ");
+			/// check if query is execute or not//
+			if(!$jobsheet_upd){
+				$flag = false;
+				$err_msg = "Error1". mysqli_error($link1) . ".";
+			}
+
+			$flag = callHistory($docid,$job_row['current_location'],"84","Request Approved By ASP","Request Approved - Without Serial",$_SESSION['asc_code'],"",$remark,"","",$ip,$link1,$flag);
+
+		}else{*********************************************************************************/
+		
+		if($repl_type=="By Dealer"){
+
+			if($replace_serial_no_dlr != "" && $replace_model_id_dlr != ""){
+				$image_wr_card1 = "";
+				$image_prd2 = "";
+				### Image Upload
+				if($_FILES['upd_doc_dlr']["name"]!=''){
+					$file_name = $_FILES['upd_doc_dlr']['name'];
+					$file_tmp = $_FILES['upd_doc_dlr']['tmp_name'];
+					
+					$my = date("Y-M");
+					$path = "../app_image/".$my;
+					if (!is_dir($path)) {
+						mkdir($path, 0777, 'R');
+					}
+					$file_path = $path.'/'.time().$file_name;
+					$img_upld1 = move_uploaded_file($file_tmp, $file_path);
+					if($img_upld1 != ""){
+						$image_wr_card1 = $file_path;
+					}else{
+						$image_wr_card1 = "";
+						$flag = false;
+						$err_msg = "Warranty Card Image can not upload on server due to size or image type issue " . mysqli_error($link1) . ".";
+					}
+				}else{
+					$image_wr_card1 = "";
+				}
+				### END Image Upload
+
+				### Image Upload
+				if($_FILES['upd_doc_dlr1']["name"]!=''){
+					$file_name1 = $_FILES['upd_doc_dlr1']['name'];
+					$file_tmp1 = $_FILES['upd_doc_dlr1']['tmp_name'];
+					
+					$my = date("Y-M");
+					$path = "../app_image/".$my;
+					if (!is_dir($path)) {
+						mkdir($path, 0777, 'R');
+					}
+					$file_path1 = $path.'/'.time().$file_name1;
+					$img_upld1 = move_uploaded_file($file_tmp1, $file_path1);
+					if($img_upld1 != ""){
+						$image_prd2 = $file_path1;
+					}else{
+						$image_prd2 = "";
+						$flag = false;
+						$err_msg = "Product Image can not upload on server due to size or image type issue " . mysqli_error($link1) . ".";
+					}
+				}else{
+					$image_prd2 = "";
+				}
+				### END Image Upload
+
+				//////// get job details
+				$old_s = mysqli_fetch_array(mysqli_query($link1,"SELECT status,job_id,job_no,current_location,location_code,city_id,model_id,eng_id,product_id,brand_id,customer_name,call_for,vistor_date,close_date,open_date,warranty_status,city_id,state_id,customer_id,imei,contact_no,email,address,pincode,dop,warranty_days,warranty_end_date,ref_no,balance_warranty_days FROM jobsheet_data WHERE job_no='".$docid."'"));
+
+				//echo "select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id_dlr."' and part_category='UNIT'"."<br><br>";
+
+				//$sql_model=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id_dlr."' and part_category='UNIT'"));
+				$sql_model=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id_dlr."' and part_category='FG Unit'"));
+
+				//echo "INSERT loc_dealer_stock_match SET location_code = '".$old_s['current_location']."', job_no='".$docid."', old_serial = '".$old_s['imei']."', old_model = '".$old_s['model_id']."', repl_dealer = '".$repl_dealer."', repl_dealer_serial = '".$replace_serial_no_dlr."', repl_dealer_model = '".$replace_model_id_dlr."', repl_dealer_part = '".$sql_model['partcode']."', entry_date = '".$today."', entry_time = '".$currtime."', entry_by = '".$_SESSION['asc_code']."', status = '1', repl_wr_card_path = '".$image_wr_card1."', repl_prd_path = '".$image_prd2."' "."<br><br>";
+
+				$loc_dealer_stock_match_upd = mysqli_query($link1,"INSERT loc_dealer_stock_match SET location_code = '".$old_s['current_location']."', job_no='".$docid."', old_serial = '".$old_s['imei']."', old_model = '".$old_s['model_id']."', repl_dealer = '".$repl_dealer."', repl_dealer_serial = '".$replace_serial_no_dlr."', repl_dealer_model = '".$replace_model_id_dlr."', repl_dealer_part = '".$sql_model['partcode']."', entry_date = '".$today."', entry_time = '".$currtime."', entry_by = '".$_SESSION['asc_code']."', status = '1', repl_wr_card_path = '".$image_wr_card1."', repl_prd_path = '".$image_prd2."' ");
+				/// check if query is execute or not//
+				if(!$loc_dealer_stock_match_upd){
+					$flag = false;
+					$err_msg = "Error7". mysqli_error($link1) . ".";
+				}
+
+				//echo "UPDATE jobsheet_data set status='86', sub_status  = '86', l3_status='86', repl_platform='ASP DLR', repl_type = '".$repl_type."', repl_dealer = '".$repl_dealer."', repl_dealer_serial = '".$replace_serial_no_dlr."', repl_dealer_model = '".$replace_model_id_dlr."' where job_no='".$docid."' "."<br><br>";
+
+				$jobsheet_upd = mysqli_query($link1,"UPDATE jobsheet_data set status='86', sub_status  = '86', l3_status='86', repl_platform='ASP DLR', repl_type = '".$repl_type."', repl_dealer = '".$repl_dealer."', repl_dealer_serial = '".$replace_serial_no_dlr."', repl_dealer_model = '".$replace_model_id_dlr."' where job_no='".$docid."' ");
+				/// check if query is execute or not//
+				if(!$jobsheet_upd){
+					$flag = false;
+					$err_msg = "Error8". mysqli_error($link1) . ".";
+				}	
+
+				$flag = callHistory($docid,$job_row['current_location'],"86","Request Approved By ASP (Dealer)","Serial Attached As per Dealer - Complaint Closer Pending",$_SESSION['asc_code'],"",$remark,"","",$ip,$link1,$flag);
+
+			}else{
+				$flag = false;
+				$err_msg = "Serial no or model id can not be blank.";
+				///// move to parent page
+				header("location:job_list_repl_btr_sr_loc.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+				exit;
+			}
+
+		}else{
+
+			$image_wr_card = "";
+			$image_prd = "";
+			$res_serial = mysqli_query($link1,"select replace_serial_no, serial_no, job_no from replacement_data where replace_serial_no='".strtoupper(trim($replace_serial_no))."' and status != '12' ");
+			$count_serial = mysqli_num_rows($res_serial);
+			$serial_data=mysqli_fetch_array($res_serial);
+			if($count_serial > 0){
+				$flag = false;
+				$err_msg = "This serial is already replaced in other complaint, Please use other serial no. ".$serial_data['job_no'];
+			}else{
+			
+				### Image Upload
+				if($_FILES['upd_doc']["name"]!=''){
+					$file_name = $_FILES['upd_doc']['name'];
+					$file_tmp = $_FILES['upd_doc']['tmp_name'];
+					
+					$my = date("Y-M");
+					$path = "../app_image/".$my;
+					if (!is_dir($path)) {
+						mkdir($path, 0777, 'R');
+					}
+					$file_path = $path.'/'.time().$file_name;
+					$img_upld1 = move_uploaded_file($file_tmp, $file_path);
+					if($img_upld1 != ""){
+						$image_wr_card = $file_path;
+					}else{
+						$image_wr_card = "";
+						$flag = false;
+						$err_msg = "Warranty Card Image can not upload on server due to size or image type issue " . mysqli_error($link1) . ".";
+					}
+				}else{
+					$image_wr_card = "";
+				}
+							
+
+				### END Image Upload
+
+				### Image Upload
+				if($_FILES['upd_doc1']["name"]!=''){
+					$file_name1 = $_FILES['upd_doc1']['name'];
+					$file_tmp1 = $_FILES['upd_doc1']['tmp_name'];
+					
+					$my = date("Y-M");
+					$path = "../app_image/".$my;
+					if (!is_dir($path)) {
+						mkdir($path, 0777, 'R');
+					}
+					$file_path1 = $path.'/'.time().$file_name1;
+					$img_upld1 = move_uploaded_file($file_tmp1, $file_path1);
+					if($img_upld1 != ""){
+						$image_prd = $file_path1;
+					}else{
+						$image_prd = "";
+						$flag = false;
+						$err_msg = "Product Image can not upload on server due to size or image type issue " . mysqli_error($link1) . ".";
+					}
+				}else{
+					$image_prd = "";
+				}
+				### END Image Upload
+
+				if($image_wr_card != "" || $image_prd != ""){
+
+					$result_img = mysqli_query($link1,"INSERT INTO image_upload_details set job_no ='".$job_row['job_no']."', activity='Replaced Product Images', img_url='".$image_wr_card."', img_url1='".$image_prd."', upload_date='".$today."',location_code='".$_SESSION['asc_code']."'");
+
+					//// check if query is not executed
+					if (!$result_img) {
+						$flag = false;
+						$err_msg = "Image Upload Problem: " . mysqli_error($link1) . ".";
+					}
+				}
+				//// pick max count of inv
+				$sql_dccount = "SELECT * FROM invoice_counter where location_code='" . $_SESSION['asc_code'] . "'";
+				$res_dccount = mysqli_query($link1, $sql_dccount) or die("error1" . mysqli_error($link1));
+				$row_dccount = mysqli_fetch_array($res_dccount);
+				$next_dcno = $row_dccount['btr_note_counter'] + 1;
+
+				$dn_invoice_no = "DN".$row_dccount['stn_series'] . "" . $row_dccount['fy'] . "" . str_pad($next_dcno, 4, "0", STR_PAD_LEFT);
+
+				$pn_invoice_no = "PN".$row_dccount['stn_series'] . "" . $row_dccount['fy'] . "" . str_pad($next_dcno, 4, "0", STR_PAD_LEFT);
+
+				$inv_check = mysqli_query($link1, "SELECT challan_no  from billing_master where challan_no='" . $dn_invoice_no . "'");
+				$avil_grncount = mysqli_fetch_assoc($inv_check);
+				if ($avil_grncount['challan_no'] != "") {
+					$flag = false;
+					$err_msg = "Invoice is already available - " . $dn_invoice_no;
+					mysqli_rollback($link1);
+					$cflag = "danger";
+					$cmsg = "Failed";
+					$msg = "Request could not be processed. Please try again." . $err_msg;
+					header("location:job_list_repl_btr_sr_loc.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+					exit;
+				}
+
+				$inv_check1 = mysqli_query($link1, "SELECT challan_no  from billing_master where challan_no='" . $pn_invoice_no . "'");
+				$avil_grncount1 = mysqli_fetch_assoc($inv_check1);
+				if ($avil_grncount1['challan_no'] != "") {
+					$flag = false;
+					$err_msg = "Invoice is already available - " . $pn_invoice_no;
+					mysqli_rollback($link1);
+					$cflag = "danger";
+					$cmsg = "Failed";
+					$msg = "Request could not be processed. Please try again." . $err_msg;
+					header("location:job_list_repl_btr_sr_loc.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+					exit;
+				}
+				////// get basic details of both parties
+				/////update next counter against invoice
+				$res_upd = mysqli_query($link1, "UPDATE invoice_counter set btr_note_counter = '" . $next_dcno . "' where location_code='" . $_SESSION['asc_code'] . "'");
+				/// check if query is execute or not//
+				if (!$res_upd) {
+					$flag = false;
+					$err_msg = "Error1" . mysqli_error($link1) . ".";
+				}
+				///// make invoice no.
+				
+				$stttr = "";
+				if($replace_serial_no!=""){
+					$stttr = " , replace_serial = '".strtoupper(trim($replace_serial_no))."', replace_model = '".$replace_model_id."' ";
+				}else{
+					$stttr = "";
+				}
+
+				//echo "UPDATE jobsheet_data set status='10',sub_status  = '10', l3_status='10' ".$stttr.", close_date='".$today."', close_time='".$currtime."', pen_status = '6', repl_platform='ASP', del_dc_no = '".$dn_invoice_no."', pick_dc_no = '".$pn_invoice_no."'  where job_no='".$docid."' "."<br><br>";
+
+				$jobsheet_upd = mysqli_query($link1,"UPDATE jobsheet_data set status='86',sub_status  = '86', l3_status='86' ".$stttr.", repl_platform='ASP', del_dc_no = '".$dn_invoice_no."', pick_dc_no = '".$pn_invoice_no."', repl_type = '".$repl_type."' where job_no='".$docid."' ");
+				/// check if query is execute or not//
+				if(!$jobsheet_upd){
+					$flag = false;
+					$err_msg = "Error1". mysqli_error($link1) . ".";
+				}	
+
+				//////// get job details
+				$old_s = mysqli_fetch_array(mysqli_query($link1,"SELECT status,job_id,job_no,current_location,location_code,city_id,model_id,eng_id,product_id,brand_id,customer_name,call_for,vistor_date,close_date,open_date,warranty_status,city_id,state_id,customer_id,imei,contact_no,email,address,pincode,dop,warranty_days,warranty_end_date,ref_no,balance_warranty_days FROM jobsheet_data WHERE job_no='".$docid."'"));
+
+				//$sql_model=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id."' and part_category='UNIT'"));
+				//echo "select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id."' and part_category='FG Unit'";exit;
+				$sql_model=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id Like '%".$replace_model_id."%' and part_category='FG Unit'"));
+				//echo "select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id."'";exit;
+				//$sql_model=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$replace_model_id."'"));
+
+				$repl_model_details=mysqli_fetch_array(mysqli_query($link1,"select product_id, brand_id from model_master where model_id='".$replace_model_id."' "));
+				//$old_part_details=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$job_row['model_id']."' and part_category='UNIT'"));
+				$old_part_details=mysqli_fetch_array(mysqli_query($link1,"select partcode,part_name,customer_price,hsn_code from partcode_master where model_id='".$job_row['model_id']."' and part_category='FG Unit'"));
+
+				$old_model_details=mysqli_fetch_array(mysqli_query($link1,"select product_id, brand_id from model_master where model_id='".$job_row['model_id']."' "));
+
+				////// PO ship from
+				$shipfromlocdet = explode("~", getAnyDetails($_SESSION['asc_code'], "locationname,locationaddress,dispatchaddress,deliveryaddress,cityid,stateid,zipcode,emailid,gstno", "location_code", "location_master", $link1));
+				////// PO dispatcher
+				$fromlocdet = explode("~", getAnyDetails($_SESSION['asc_code'], "locationname,locationaddress,dispatchaddress,deliveryaddress,cityid,stateid,zipcode,emailid,gstno,contactno1", "location_code", "location_master", $link1));
+				////// PO receiver
+				$tolocdet = explode("~", getAnyDetails($old_s['customer_id'], "customer_name,address1,cityid,stateid,pincode,email,gst_no,mobile", "customer_id", "customer_master", $link1));
+				
+				////// get from city details
+				$fromloccity = explode("~", getAnyDetails($fromlocdet[4], "city,state", "cityid", "city_master", $link1));
+				////// get to city details
+				$toloccity = explode("~", getAnyDetails($tolocdet[2], "city,state", "cityid", "city_master", $link1));
+
+				################## PICKUP NOTE #####################
+				//$sql_billdata = "INSERT INTO billing_product_items set from_location='" . $old_s['customer_name'] . "', to_location='" . $_SESSION['asc_code'] . "', challan_no='" . $pn_invoice_no . "', type='PICKUP NOTE', hsn_code='" . $old_part_details['hsn_code'] . "', product_id ='" . $old_model_details['product_id'] . "', brand_id ='" . $old_model_details['brand_id'] . "', model_id ='" . $job_row['model_id'] . "', partcode ='" . $old_part_details['partcode'] . "', part_name='" . $old_part_details['part_name'] . "', qty ='1' , okqty='1', price='" . $old_part_details['customer_price'] . "', uom='PCS', value='" . $old_part_details['customer_price'] . "', basic_amt='" . $old_part_details['customer_price'] . "', item_total='" . $old_part_details['customer_price'] . "', stock_type='Faulty', job_no = '".$docid."' ";
+				$sql_billdata = "INSERT INTO billing_product_items set from_location='" . $old_s['customer_name'] . "', to_location='" . $_SESSION['asc_code'] . "', challan_no='" . $pn_invoice_no . "', type='PICKUP NOTE', hsn_code='" . $sql_model['hsn_code'] . "', product_id ='" . $sql_model['product_id'] . "', brand_id ='" . $sql_model['brand_id'] . "', model_id ='" . $job_row['model_id'] . "', partcode ='" . $sql_model['partcode'] . "', part_name='" . $sql_model['part_name'] . "', qty ='1' , okqty='1', price='" . $sql_model['customer_price'] . "', uom='PCS', value='" . $sql_model['customer_price'] . "', basic_amt='" . $sql_model['customer_price'] . "', item_total='" . $sql_model['customer_price'] . "', stock_type='Faulty', job_no = '".$docid."' ";
+				$res_billdata = mysqli_query($link1, $sql_billdata);
+				//// check if query is not executed
+				if (!$res_billdata) {
+					$flag = false;
+					$err_msg = "Error details3: " . mysqli_error($link1) . ".";
+				}
+
+				$sql_billmaster = "INSERT INTO billing_master set from_location='" . $old_s['customer_name'] . "', to_location='" . $_SESSION['asc_code'] . "', from_gst_no='" . $tolocdet[6] . "', to_gst_no='" . $fromlocdet[8] . "', from_partyname='" . $tolocdet[0] . "', party_name='" . $fromlocdet[0] . "', challan_no='" . $pn_invoice_no . "', sale_date='" . $today . "',entry_date='" . $today . "', entry_time='" . $currtime . "', logged_by='" . $_SESSION['asc_code'] . "',billing_rmk='Battery Pickup Note', bill_from='" . $fromlocdet[0] . "', from_stateid='" . $tolocdet[3] . "',to_stateid='" . $fromlocdet[5] . "' , from_state='" . $toloccity[1] . "', to_state='" . $fromloccity[1] . "',from_cityid='" . $tolocdet[2] . "', from_city='" . $toloccity[0] . "', to_cityid='" . $fromlocdet[4] . "', to_city='" . $fromloccity[0] . "', from_pincode='" . $tolocdet[4] . "', to_pincode='" . $fromlocdet[6] . "', from_phone='" . $tolocdet[7] . "', to_phone='" . $fromlocdet[9] . "', from_email='" . $tolocdet[5] . "', to_email='" . $fromlocdet[7] . "',bill_to='" . $old_s['customer_name'] . "', from_addrs='" . $tolocdet[1] . "', disp_addrs='" . $tolocdet[1] . "', to_addrs='" . $fromlocdet[1] . "', deliv_addrs='" . $fromlocdet[3] . "', status='3', document_type='DC', po_type='PICKUP NOTE', basic_cost='" . $old_part_details['customer_price'] . "',  total_cost='" . $old_part_details['customer_price'] . "',purpose='', ship_from_code = '" . $old_s['customer_name'] . "', ship_from_gst = '" . $tolocdet[6] . "', ship_from_state = '" . $tolocdet[3] . "', ship_from_addr = '" . $tolocdet[1] . "', stock_type='Faulty', job_no = '".$docid."', job_serial_no = '".$old_s['imei']."', customer_id = '".$old_s['customer_id']."' ";
+
+				$res_billmaster = mysqli_query($link1, $sql_billmaster);
+				//// check if query is not executed
+				if (!$res_billmaster) {
+					$flag = false;
+					$err_msg = "Error details6: " . mysqli_error($link1) . ".";
+				}
+
+				################## PICKUP NOTE #####################
+				
+
+
+				if($sql_model['partcode']!=""){
+
+					################## DELIVERY NOTE #####################
+					$sql_billdata = "INSERT INTO billing_product_items set from_location='" . $_SESSION['asc_code'] . "', to_location='" . $old_s['customer_name'] . "', challan_no='" . $dn_invoice_no . "', type='DELIVERY NOTE', hsn_code='" . $sql_model['hsn_code'] . "', product_id ='" . $repl_model_details['product_id'] . "', brand_id ='" . $repl_model_details['brand_id'] . "', model_id ='" . $replace_model_id . "', partcode ='" . $sql_model['partcode'] . "', part_name='" . $sql_model['part_name'] . "', qty ='1' , okqty='1', price='" . $sql_model['customer_price'] . "', uom='PCS', value='" . $sql_model['customer_price'] . "', basic_amt='" . $sql_model['customer_price'] . "', item_total='" . $sql_model['customer_price'] . "', stock_type='OK', job_no = '".$docid."' ";
+
+					$res_billdata = mysqli_query($link1, $sql_billdata);
+					//// check if query is not executed
+					if (!$res_billdata) {
+						$flag = false;
+						$err_msg = "Error details DN: " . mysqli_error($link1) . ".";
+					}
+					 $sql_billmaster = "INSERT INTO billing_master set from_location='".$_SESSION['asc_code']."', from_gst_no='".$fromlocdet[8]."', from_partyname='".$fromlocdet[0]."', bill_from='".$fromlocdet[0]."', from_stateid='".$fromlocdet[5]."', from_state='".$fromloccity[1]."', from_cityid='".$fromlocdet[4]."', from_city='".$fromloccity[0]."', from_pincode='".$fromlocdet[6]."', from_phone='".$fromlocdet[9]."', from_email='".$fromlocdet[7]."', from_addrs='".$fromlocdet[1]."', to_location='".$old_s['customer_name']."', to_gst_no='".$tolocdet[6]."', to_stateid='".$tolocdet[3]."', to_state='".$toloccity[1]."', to_cityid='".$tolocdet[2]."', to_city='".$toloccity[0]."', to_pincode='".$tolocdet[4]."', to_phone='".$tolocdet[7]."', to_email='".$tolocdet[5]."', bill_to='".$old_s['customer_name']."', to_addrs='". $tolocdet[1]."', deliv_addrs='".$tolocdet[1]."', disp_addrs='".$fromlocdet[2]."', party_name='".$old_s['customer_name']."', challan_no='" . $dn_invoice_no . "', sale_date='" . $today . "',entry_date='" . $today . "', entry_time='" . $currtime . "', logged_by='" . $_SESSION['asc_code'] . "',billing_rmk='Battery Delivery Note', status='4', document_type='DC', po_type='DELIVERY NOTE', basic_cost='" . $old_part_details['customer_price'] . "',  total_cost='" . $old_part_details['customer_price'] . "', ship_from_code = '" . $_SESSION['asc_code'] . "', ship_from_gst = '" . $shipfromlocdet[8] . "', ship_from_state = '" . $shipfromlocdet[5] . "', ship_from_addr = '" . $shipfromlocdet[1] . "', stock_type='OK', job_no = '".$docid."', job_serial_no = '".$old_s['imei']."', customer_id = '".$old_s['customer_id']."', purpose='', receive_date = '".$today."', job_repl_serial_no = '".strtoupper(trim($replace_serial_no))."', job_repl_model = '".$replace_model_id."', job_repl_partcode = '".$sql_model['partcode']."', pick_up_by = '".$pick_up_by."', transport_name = '".$transport_name."', vehicle_no = '".$vehicle_no."', person_name = '".$person_name."', person_no = '".$person_no."' ";
+
+					$res_billmaster = mysqli_query($link1, $sql_billmaster);
+					//// check if query is not executed
+					if (!$res_billmaster) {
+						$flag = false;
+						$err_msg = "Error details DN: " . mysqli_error($link1) . ".";
+					}
+					################## DELIVERY NOTE #####################
+					
+					$sql_replacement=mysqli_query($link1,"insert into replacement_data set job_id='".$old_s['job_id']."', job_no='".$docid."',open_date='".$old_s['open_date']."',brand_id='".$old_s['brand_id']."',product_id='".$old_s['product_id']."',model_id='".$old_s['model_id']."',partcode='',serial_no='".$old_s['imei']."',dop='".$old_s['dop']."',warranty_days='".$old_s['warranty_days']."',warranty_status='".$old_s['warranty_status']."',warranty_end_date='".$old_s['warranty_end_date']."',close_date='',close_time='".$currtime."',replace_by='".$old_s['eng_id']."',replace_location='".$old_s['current_location']."',replace_serial_no='".strtoupper(trim($replace_serial_no))."',replace_model_id='".$replace_model_id."',replace_partcode='".$sql_model['partcode']."',entry_time='".$currtime."',entry_date='".$today."',replace_serial_mfg='',replace_serial_mfg_ex='', balance_warranty_days = '".$old_s['balance_warranty_days']."', repl_platform='ASP', status='86' ");	
+
+					if(!$sql_replacement) {
+						$flag = false;
+						$err_msg = "Error repl". mysqli_error($link1) . ".";
+					}
+
+					////// insert data in repair table	
+					//echo "INSERT INTO repair_detail SET job_id='".$old_s['job_id']."', job_no ='".$docid."', repair_location='".$old_s['current_location']."', repair_type='Replacement', location_code='".$old_s['location_code']."', model_id='".$old_s['model_id']."', eng_id ='".$old_s['eng_id']."' , status='86', remark='Battery Replaced', repair_code='', partcode='', part_qty='1', fault_code='', rep_lvl='', part_repl='',close_date='', warranty_status = '".$old_s['warranty_status']."' ,old_challan='', ref_sno='', product_id = '".$old_s['product_id']."', brand_id='".$old_s['brand_id']."', replace_serial='".strtoupper(trim($replace_serial_no))."', repl_model='".$replace_model_id."', old_serial='".$old_s['imei']."', part_cost='".$sql_model['customer_price']."',loc_on_pcb='', pcb_repairable='', app_version='".$app_version."', scan_type='M',img_name='', battery_name='',battery_other='', module = '', old_type = 'M', old_serial_fileName = '', handover_date = '".$today."' ";exit;
+					$res_reapirdata = mysqli_query($link1, "INSERT INTO repair_detail SET job_id='".$old_s['job_id']."', job_no ='".$docid."', repair_location='".$old_s['current_location']."', repair_type='Replacement', location_code='".$old_s['location_code']."', model_id='".$old_s['model_id']."', eng_id ='".$old_s['eng_id']."' , status='86', remark='Battery Replaced', repair_code='', partcode='', part_qty='1', fault_code='', rep_lvl='', part_repl='',close_date='', warranty_status = '".$old_s['warranty_status']."' ,old_challan='', ref_sno='', product_id = '".$old_s['product_id']."', brand_id='".$old_s['brand_id']."', replace_serial='".strtoupper(trim($replace_serial_no))."', repl_model='".$replace_model_id."', old_serial='".$old_s['imei']."', part_cost='".$sql_model['customer_price']."',loc_on_pcb='', pcb_repairable='', app_version='".$app_version."', scan_type='M', old_type = 'M', handover_date = '".$today."' ");
+					//// check if query is not executed
+					if (!$res_reapirdata){
+						$flag = false;
+						$err_msg = "Error In repair Details table: " . mysqli_error($link1) . ".";
+					}
+					$imei_upd = mysqli_query($link1,"UPDATE imei_details_asp set status='2', eng_challan_no = '".$docid."', eng_challan_date = '".$today."' where imei1='".strtoupper(trim($replace_serial_no))."' and stock_type in ('okqty','OK') and imei1 != '' and status = '1' ");
+					/// check if query is execute or not//
+					if(!$imei_upd){
+						$flag = false;
+						$err_msg = "Error imei_details_asp ". mysqli_error($link1) . ".";
+					}
+                  $check_invt = mysqli_query($link1,"select okqty from client_inventory where location_code='".$old_s['current_location']."' and partcode='".$sql_model['partcode']."' and okqty > 0 ");
+					if(mysqli_num_rows($check_invt)>0){
+					
+					$res_invt = mysqli_query($link1,"UPDATE client_inventory set okqty = okqty-'1' where location_code='".$old_s['current_location']."' and partcode='".$sql_model['partcode']."' and okqty >0");
+					//// check if query is not executed
+					if(!$res_invt) {
+						$flag = false;
+						$err_msg = "Error details3: " . mysqli_error($link1) . ".";
+					}
+					}else{
+					$flag = false;
+					$err_msg = "Inventory not available. ";
+					}
+										//print_r($sql_model['partcode']);exit;
+
+
+                   //  echo "insert into stock_ledger set reference_no='".$docid."',reference_date='".$today."',partcode='".$sql_model['partcode']."',from_party='".$old_s['current_location']."', to_party='".$old_s['customer_name']."', owner_code='".$old_s['current_location']."', stock_transfer='OUT', stock_type='OK', type_of_transfer='FRESH BTR REPL', action_taken='FRESH BTR REPL', qty='1', rate='".$sql_model['customer_price']."', create_by='".$old_s['current_location']."', create_date='".$today."', create_time='".$currtime."', ip='".$_SERVER['REMOTE_ADDR']."', other_info = '".$_SESSION['asc_code']."', product_id ='" . $repl_model_details['product_id'] . "', brand_id ='" . $repl_model_details['brand_id'] . "'";exit;
+					$result_p=mysqli_query($link1, "insert into stock_ledger set reference_no='".$docid."',reference_date='".$today."',partcode='".$sql_model['partcode']."',from_party='".$old_s['current_location']."', to_party='".$old_s['customer_name']."', owner_code='".$old_s['current_location']."', stock_transfer='OUT', stock_type='OK', type_of_transfer='FRESH BTR REPL', action_taken='FRESH BTR REPL', qty='1', rate='".$sql_model['customer_price']."', create_by='".$old_s['current_location']."', create_date='".$today."', create_time='".$currtime."', ip='".$_SERVER['REMOTE_ADDR']."', other_info = '".$_SESSION['asc_code']."', product_id ='" . $repl_model_details['product_id'] . "', brand_id ='" . $repl_model_details['brand_id'] . "'");
+					//// check if query is not executed
+					if(!$result_p){
+						$flag = false;
+						$err_msg = "Error details pos SL: " . mysqli_error($link1) . "";
+					}
+					
+					$flag = callHistory($docid,$job_row['current_location'],"84","Request Approved By ASP","Request Approved - Serial Replaced",$_SESSION['asc_code'],"",$remark,"","",$ip,$link1,$flag);
+
+					$flag = callHistory($docid,$job_row['current_location'],"86","Request Approved By ASP","Serial Attached - Complaint Closer Pending",$_SESSION['asc_code'],"",$remark,"","",$ip,$link1,$flag);
+				}else{
+					$flag = false;
+					$err_msg = "Partcode (UNIT) not created for this model. ".$replace_model_id;
+				}
+			}	
+			//} not in use
+		}//////// check repl type 
+
+		////// insert in activity table////
+		$flag = dailyActivity($_SESSION['asc_code'], $docid, "86",$remark,$_SERVER['REMOTE_ADDR'], $link1, $flag);
+		//print_r('ddddddddd');exit;
+		///// check both master and data query are successfully executed
+		if ($flag) {
+			mysqli_commit($link1);
+			$msg = "Successfully done with ref. no. " . $docid;
+			$cflag = "success";
+			$cmsg = "Success";
+		} else {
+			mysqli_rollback($link1);
+			$msg = "Request could not be processed " . $err_msg . ". Please try again.";
+			$cflag = "danger";
+			$cmsg = "Failed";
+		}
+		mysqli_close($link1);
+		///// move to parent page
+		header("location:job_list_repl_btr_sr_loc.php?msg=".$msg."&chkflag=".$cflag."&chkmsg=".$cmsg."".$pagenav);
+		exit;
+
+		//} /// otp check close
+	}	               
+}
+
+?>
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title><?=siteTitle?></title>
+		<link rel="shortcut icon" href="../images/titleimg.png" type="image/png">
+		<script src="../js/jquery.js"></script>
+		<link href="../css/font-awesome.min.css" rel="stylesheet">
+		<link href="../css/abc.css" rel="stylesheet">
+		<script src="../js/bootstrap.min.js"></script>
+		<link href="../css/abc2.css" rel="stylesheet">
+		<link rel="stylesheet" href="../css/bootstrap.min.css">
+
+		<link rel="stylesheet" href="../css/bootstrap-select.min.css">
+ 		<script src="../js/bootstrap-select.min.js"></script>
+
+	<script>
+
+		$(document).ready(function(){
+
+			//$("#frm1").validate();
+			var spinner = $('#loader');
+			$("#frm1").validate({
+				submitHandler: function (form){
+					if(!this.wasSent){
+						this.wasSent = true;
+						$(':submit', form).val('Please wait...')
+								.attr('disabled', 'disabled')
+								.addClass('disabled');
+						spinner.show();
+						form.submit();
+					}else{
+						return false;
+					}
+				}
+			});
+
+		});
+
+	</script>
+
+	</head>
+	<script>
+		function bigImg(x) {
+			x.style.height = "300px";
+			x.style.width = "300px";
+		}
+
+		function normalImg(x) {
+			x.style.height = "100px";
+			x.style.width = "100px";
+		}
+
+		function check_appr_div(actionid){
+			if(actionid=="82"){
+				//document.getElementById("appr_div").style.display="block";
+				//document.getElementById("appr_div").style.display="block";
+				document.getElementById("replace_serial_no").style.display="block";
+				document.getElementById("replace_model_id").style.display="block";
+				document.getElementById("replace_serial_no").required = true;
+				document.getElementById("replace_model_id").required = true;
+				document.getElementById("rpl1_flg").style.display="block";
+				document.getElementById("rpl2_flg").style.display="block";
+			}else{
+				//document.getElementById("appr_div").style.display="none";
+				document.getElementById("replace_serial_no").value="";
+				document.getElementById("replace_model_id").value="";
+				document.getElementById("replace_serial_no").style.display="none";
+				document.getElementById("replace_model_id").style.display="none";
+				document.getElementById("replace_serial_no").required = false;
+				document.getElementById("replace_model_id").required = false;
+				document.getElementById("rpl1_flg").style.display="none";
+				document.getElementById("rpl2_flg").style.display="none";
+			}
+		}
+
+		function check_repl_type_div(){
+			var repl_type = document.getElementById("repl_type").value;
+			if(repl_type=="By Dealer"){
+				document.getElementById("dlrcls").style.display="block";
+				document.getElementById("loccls").style.display="none";
+
+				document.getElementById("replace_serial_no").value="";
+				document.getElementById("replace_model_id").value="";
+				document.getElementById("upd_doc").value="";
+				document.getElementById("upd_doc1").value="";
+				document.getElementById("pick_up_by").value="";
+				document.getElementById("transport_name").value="";
+				document.getElementById("vehicle_no").value="";
+				document.getElementById("person_name").value="";
+				document.getElementById("person_no").value="";
+			}else{
+				document.getElementById("dlrcls").style.display="none";
+				document.getElementById("loccls").style.display="block";
+
+				document.getElementById("repl_dealer").value="";
+				document.getElementById("replace_serial_no_dlr").value="";
+				document.getElementById("replace_model_id_dlr").value="";
+				document.getElementById("upd_doc_dlr").value="";
+				document.getElementById("upd_doc_dlr1").value="";
+			}
+		}
+
+	</script>
+<script language="javascript" type="text/javascript">
+function validateImage(nam,ind) {
+	var err_msg="";
+	
+    var file = document.getElementById(nam).files[0];
+    var t = file.type.split('/').pop().toLowerCase();
+	
+    if(t != "jpeg" && t != "jpg" && t != "png" && t != "bmp" && t != "gif") {
+		err_msg = "<strong>Please select a valid file. <br/></strong>";
+		document.getElementById("errmsg"+ind).innerHTML = err_msg;
+		document.getElementById(nam).value = '';
+        return false;
+    }else if(file.size > 2048000){  /**** 204800 ***/
+		err_msg = "<strong>Max file size can be 2 MB.<br/></strong>";
+		document.getElementById("errmsg"+ind).innerHTML = err_msg;
+		document.getElementById(nam).value = '';
+        return false;
+    }else{
+		document.getElementById("errmsg"+ind).innerHTML ="";
+	}
+    
+	return true;
+}
+
+function displaySerialDataCheckDlr(){
+	var mm_serial =  document.getElementById('replace_serial_no_dlr').value;
+	if(mm_serial!=""){
+		$.ajax({
+			type:'post',
+			url:'../includes/getAzaxFields.php',
+			data:{checkSerialDupliReplBtr:mm_serial},
+			success:function(data){
+				var data_split=data.split("~");
+				//console.log(data_split);
+				if(data_split[0]=="0"){
+					//alert(data_split[0]+' mm_serial ');
+					getSerialdeatils2();
+				}else{
+					document.getElementById('replace_serial_no_dlr').value = "";
+					alert('This serial no ('+data_split[3]+') already replaced in this complaint ('+data_split[2]+'). Please use other serial no.');
+				}
+			}
+		});
+	}
+}
+
+function getSerialdeatils2(){
+	var myString =  document.getElementById('replace_serial_no_dlr').value;
+	if(myString != ""){
+		getSerialdeatilsdlr(myString,'0');
+	}
+}	
+
+function getSerialdeatilsdlr(myString,ind){
+	var mm_serial=myString;
+	var myNewString=myString.substr(1);
+	var indx=ind;
+///// check first character is number or alphabet \\\\\
+	var check_f = myString.substr(0,1);
+       
+	if (Number(check_f)){ 
+	//alert(check_f+'isnumber');	
+///// if first character is number \\\\\	
+///// check first two character are string or number \\\\\
+	var check_y = myString.substr(0,2); 	
+	if (isNaN(check_y)){
+	//alert(check_y+'Not Number');
+	var mm_year = myString.substr(0,1); 
+	var mm_month = myString.substr(1,1); 
+	var mm_type = myString.substr(2,1); 
+	var mm_model = myString.substr(3,1); 
+	var mm_plant = myString.substr(4,2); 
+	var mm_plant_n=myString.substr(4,1);
+	var mm_line_n=myString.substr(5,1);
+	var mm_component_n=myString.substr(6,2);
+	var mm_sno = myString.substr(8);
+		} else {
+	var mm_year = myString.substr(0,2); 
+	var mm_month = myString.substr(2,1); 
+	var mm_type = myString.substr(3,1); 
+	var mm_model = myString.substr(4,1); 
+	var mm_plant = myString.substr(5,2); 
+	var mm_plant_n=myString.substr(5,1);
+	var mm_line_n=myString.substr(6,1);
+	var mm_component_n=myString.substr(7,2);
+	var mm_sno = myString.substr(9);
+		}
+        
+	}
+///// if first character is alphabet \\\\\\	
+else {
+///// check first two character are string or number after excluding first Alphabet \\\\\
+
+	var check_y = myNewString.substr(0,2); 	
+	if (isNaN(check_y)){
+	//alert(check_y);
+	var mm_year = myNewString.substr(0,1); 
+	var mm_month = myNewString.substr(1,1); 
+	var mm_type = myNewString.substr(2,1); 
+	var mm_model = myNewString.substr(3,1); 
+	var mm_plant = myNewString.substr(4,2); 
+	var mm_plant_n=myString.substr(4,1);
+	var mm_line_n=myString.substr(5,1);
+	var mm_component_n=myString.substr(6,2);
+	var mm_sno = myNewString.substr(8);	
+		} else {
+	var mm_year = myNewString.substr(0,2); 
+	var mm_month = myNewString.substr(2,1); 
+	var mm_type = myNewString.substr(3,1); 
+	var mm_model = myNewString.substr(4,1); 
+	var mm_plant = myNewString.substr(5,2); 
+	var mm_plant_n=myString.substr(5,1);
+	var mm_line_n=myString.substr(6,1);
+	var mm_component_n=myString.substr(7,2);
+	var mm_sno = myNewString.substr(9);
+		}
+    
+}
+////////////////// Year \\\\\\\\\\\\\\\\\\\\\
+		if(mm_year=="0" || mm_year=="1" ||mm_year=="2" ||mm_year=="3" ||mm_year=="4" ||mm_year=="5" ||mm_year=="6" ||mm_year=="7" ||mm_year=="7" || mm_year=="8" || mm_year=="9"){
+		var mm_yearn=200;}
+		else if(mm_year=="10" || mm_year=="11" || mm_year=="12" || mm_year=="13" || mm_year=="14" || mm_year=="15" || mm_year=="16" || mm_year=="17" || mm_year=="18" || mm_year=="19" || mm_year=="20" || mm_year=="21" || mm_year=="22" || mm_year=="23" || mm_year=="24" || mm_year=="25"){
+		var mm_yearn=20;}
+		else{var mm_yearn='';}
+		
+////////////////// Month \\\\\\\\\\\\\\\\\\\\\
+			 if(mm_month=="A" || mm_month=="a"){
+		var mm_monthn='01';}
+		else if(mm_month=="B" || mm_month=="b"){
+		var mm_monthn='02';}
+		else if(mm_month=="C" || mm_month=="c"){
+		var mm_monthn='03';}
+		else if(mm_month=="D" || mm_month=="d"){
+		var mm_monthn='04';}
+		else if(mm_month=="E" || mm_month=="e"){
+		var mm_monthn='05';}
+		else if(mm_month=="F" || mm_month=="f"){
+		var mm_monthn='06';}
+		else if(mm_month=="G" || mm_month=="g"){
+		var mm_monthn='07';}
+		else if(mm_month=="H" || mm_month=="h"){
+		var mm_monthn='08';}
+		else if(mm_month=="I" || mm_month=="i"){
+		var mm_monthn='09';}
+		else if(mm_month=="J" || mm_month=="j"){
+		var mm_monthn='10';}
+		else if(mm_month=="K" || mm_month=="k"){
+		var mm_monthn='11';}
+		else if(mm_month=="L" || mm_month=="l"){
+		var mm_monthn='12';}
+		else {var mm_monthn='';}
+///////////////// MFD Date \\\\\\\\\\\\\\\\		
+var mm_mfd = mm_yearn+mm_year+'-'+mm_monthn;
+
+checkSrNoDataCRMDLR(mm_serial);
+
+};
+
+function checkSrNoDataCRMDLR(mm_serial){ 
+	if(mm_serial!=""){		
+		var strSubmit = "action=getSrNoWiseDataCRM&mm_serial="+mm_serial;
+		var strURL = "../includes/getSerialData_V7.php";
+		var strResultFunc="displaySerialDataCRMDLR";
+		xmlhttpPost(strURL,strSubmit,strResultFunc);
+		return false;	
+	}
+}
+
+function displaySerialDataCRMDLR(result){
+	var res1=result.split("^");
+	//console.log(res1);
+	getNewWttyBySrCRMDLR(res1[0], res1[2], res1[4]);
+
+}	
+
+function getNewWttyBySrCRMDLR(serial_no, product_id, model_id){
+	var strSubmit = "action=getPartSrNoWiseDataCRMREPLDLR&product_id="+product_id+"&model_id="+model_id+"&serial_no="+serial_no;
+	var strURL = "../includes/getSerialData_V7.php";
+	var strResultFunc="displayPartSerialDataCRMDLR";
+	xmlhttpPost(strURL,strSubmit,strResultFunc);
+	return false;	
+}
+
+function displayPartSerialDataCRMDLR(result){
+	var res1=result.split("^");
+	$('#modeldivdlr').html(res1[0]);
+}	
+
+
+function displaySerialDataCheck(){
+	var mm_serial =  document.getElementById('replace_serial_no').value;
+	if(mm_serial!=""){
+		$.ajax({
+			type:'post',
+			url:'../includes/getAzaxFields.php',
+			data:{checkSerialDupliReplBtr:mm_serial},
+			success:function(data){
+				var data_split=data.split("~");
+				//console.log(data_split);
+				if(data_split[0]=="0"){
+					getSerialdeatils1();
+				}else{
+					document.getElementById('replace_serial_no').value = "";
+					alert('This serial no ('+data_split[3]+') already replaced in this complaint ('+data_split[2]+'). Please use other serial no.');
+				}
+			}
+		});
+	}
+}
+
+function getSerialdeatils1(){
+	var myString =  document.getElementById('replace_serial_no').value;
+	if(myString != ""){
+		getSerialdeatils(myString,'0');
+	}
+}	
+
+function getSerialdeatils(myString,ind){
+	var mm_serial=myString;
+	var myNewString=myString.substr(1);
+	var indx=ind;
+///// check first character is number or alphabet \\\\\
+	var check_f = myString.substr(0,1);
+       
+	if (Number(check_f)){ 
+	//alert(check_f+'isnumber');	
+///// if first character is number \\\\\	
+///// check first two character are string or number \\\\\
+	var check_y = myString.substr(0,2); 	
+	if (isNaN(check_y)){
+	//alert(check_y+'Not Number');
+	var mm_year = myString.substr(0,1); 
+	var mm_month = myString.substr(1,1); 
+	var mm_type = myString.substr(2,1); 
+	var mm_model = myString.substr(3,1); 
+	var mm_plant = myString.substr(4,2); 
+	var mm_plant_n=myString.substr(4,1);
+	var mm_line_n=myString.substr(5,1);
+	var mm_component_n=myString.substr(6,2);
+	var mm_sno = myString.substr(8);
+		} else {
+	var mm_year = myString.substr(0,2); 
+	var mm_month = myString.substr(2,1); 
+	var mm_type = myString.substr(3,1); 
+	var mm_model = myString.substr(4,1); 
+	var mm_plant = myString.substr(5,2); 
+	var mm_plant_n=myString.substr(5,1);
+	var mm_line_n=myString.substr(6,1);
+	var mm_component_n=myString.substr(7,2);
+	var mm_sno = myString.substr(9);
+		}
+        
+	}
+///// if first character is alphabet \\\\\\	
+else {
+///// check first two character are string or number after excluding first Alphabet \\\\\
+
+	var check_y = myNewString.substr(0,2); 	
+	if (isNaN(check_y)){
+	//alert(check_y);
+	var mm_year = myNewString.substr(0,1); 
+	var mm_month = myNewString.substr(1,1); 
+	var mm_type = myNewString.substr(2,1); 
+	var mm_model = myNewString.substr(3,1); 
+	var mm_plant = myNewString.substr(4,2); 
+	var mm_plant_n=myString.substr(4,1);
+	var mm_line_n=myString.substr(5,1);
+	var mm_component_n=myString.substr(6,2);
+	var mm_sno = myNewString.substr(8);	
+		} else {
+	var mm_year = myNewString.substr(0,2); 
+	var mm_month = myNewString.substr(2,1); 
+	var mm_type = myNewString.substr(3,1); 
+	var mm_model = myNewString.substr(4,1); 
+	var mm_plant = myNewString.substr(5,2); 
+	var mm_plant_n=myString.substr(5,1);
+	var mm_line_n=myString.substr(6,1);
+	var mm_component_n=myString.substr(7,2);
+	var mm_sno = myNewString.substr(9);
+		}
+    
+}
+////////////////// Year \\\\\\\\\\\\\\\\\\\\\
+		if(mm_year=="0" || mm_year=="1" ||mm_year=="2" ||mm_year=="3" ||mm_year=="4" ||mm_year=="5" ||mm_year=="6" ||mm_year=="7" ||mm_year=="7" || mm_year=="8" || mm_year=="9"){
+		var mm_yearn=200;}
+		else if(mm_year=="10" || mm_year=="11" || mm_year=="12" || mm_year=="13" || mm_year=="14" || mm_year=="15" || mm_year=="16" || mm_year=="17" || mm_year=="18" || mm_year=="19" || mm_year=="20" || mm_year=="21" || mm_year=="22" || mm_year=="23" || mm_year=="24" || mm_year=="25"){
+		var mm_yearn=20;}
+		else{var mm_yearn='';}
+		
+////////////////// Month \\\\\\\\\\\\\\\\\\\\\
+			 if(mm_month=="A" || mm_month=="a"){
+		var mm_monthn='01';}
+		else if(mm_month=="B" || mm_month=="b"){
+		var mm_monthn='02';}
+		else if(mm_month=="C" || mm_month=="c"){
+		var mm_monthn='03';}
+		else if(mm_month=="D" || mm_month=="d"){
+		var mm_monthn='04';}
+		else if(mm_month=="E" || mm_month=="e"){
+		var mm_monthn='05';}
+		else if(mm_month=="F" || mm_month=="f"){
+		var mm_monthn='06';}
+		else if(mm_month=="G" || mm_month=="g"){
+		var mm_monthn='07';}
+		else if(mm_month=="H" || mm_month=="h"){
+		var mm_monthn='08';}
+		else if(mm_month=="I" || mm_month=="i"){
+		var mm_monthn='09';}
+		else if(mm_month=="J" || mm_month=="j"){
+		var mm_monthn='10';}
+		else if(mm_month=="K" || mm_month=="k"){
+		var mm_monthn='11';}
+		else if(mm_month=="L" || mm_month=="l"){
+		var mm_monthn='12';}
+		else {var mm_monthn='';}
+///////////////// MFD Date \\\\\\\\\\\\\\\\		
+	var mm_mfd = mm_yearn+mm_year+'-'+mm_monthn;
+////////document.getElementById("mfd["+indx+"]").value=mm_mfd;
+///////////////// Product \\\\\\\\\\\\\\\\\\\\	
+//chkProductSno(mm_type,ind);
+///////////////// Model \\\\\\\\\\\\\\\\\\\\	
+//chkModelSno(mm_model,mm_type,ind);
+///////////////// Plant \\\\\\\\\\\\\\\\\\\\	
+//chkPlantSno(mm_plant,ind);
+///////////////// Plant_n \\\\\\\\\\\\\\\\\\\\	
+//chkPlant_nSno(mm_plant_n,ind);
+///////////////// line \\\\\\\\\\\\\\\\\\\\	
+//chkLineSno(mm_line_n,mm_plant_n,ind);
+///////////////// Component \\\\\\\\\\\\\\\\\\\\	
+//chkComponentSno(mm_component_n,mm_model,ind);
+///////////////// Sno \\\\\\\\\\\\\\\\\\\\	hold now 
+//getWarrantyDataSno(mm_serial,mm_model,mm_mfd,ind,mm_type);
+///////////////// Check Serial No \\\\\\\\\\\\\\\\\\\\
+//checkSrNoData(mm_serial,mm_model,mm_mfd,ind,mm_type);
+
+checkSrNoDataCRM(mm_serial);
+
+////tttttttttttttttt
+//getmapVOC();
+
+};
+
+function checkSrNoDataCRM(mm_serial){ 
+	if(mm_serial!=""){		
+		var strSubmit = "action=getSrNoWiseDataCRM&mm_serial="+mm_serial;
+		var strURL = "../includes/getSerialData_V7.php";
+		var strResultFunc="displaySerialDataCRM";
+		xmlhttpPost(strURL,strSubmit,strResultFunc);
+		return false;	
+	}
+}
+
+function displaySerialDataCRM(result){
+	var res1=result.split("^");
+	//console.log(res1);
+	getNewWttyBySrCRM(res1[0], res1[2], res1[4]);
+
+}	
+
+function getNewWttyBySrCRM(serial_no, product_id, model_id){
+	var strSubmit = "action=getPartSrNoWiseDataCRMREPL&product_id="+product_id+"&model_id="+model_id+"&serial_no="+serial_no;
+	var strURL = "../includes/getSerialData_V7.php";
+	var strResultFunc="displayPartSerialDataCRM";
+	xmlhttpPost(strURL,strSubmit,strResultFunc);
+	return false;	
+}
+
+function displayPartSerialDataCRM(result){
+	var res1=result.split("^");
+	//console.log(res1);
+	$('#modeldiv').html(res1[0]);
+	//$('#prddiv').html(res1[1]);
+}	
+
+
+
+</script>
+
+<script type="text/javascript" src="../js/jquery.validate.js"></script>
+
+ <script type="text/javascript" src="../js/common_js.js"></script>
+
+<script type="text/javascript" src="../js/ajax.js"></script>
+
+	<body onKeyPress="return keyPressed(event);">
+
+		<div class="container-fluid">
+			<div class="row content">
+				<?php 
+	include("../includes/leftnavemp2.php");
+				?>
+				<div class="<?=$screenwidth?>">
+					<h2 align="center"><i class="fa fa-list-alt"></i> REPLACEMENT SNO ATTACHE (Self) </h2>
+					<h4 align="center">Job No.- <?=$docid?></h4>
+					<div class="panel-group">
+						<div class="panel panel-info table-responsive">
+							<div class="panel-heading"><i class="fa fa-id-card fa-lg"></i>&nbsp;&nbsp;Customer Details</div>
+							<div class="panel-body">
+								<table class="table table-bordered" width="100%">
+									<tbody>
+										<tr>
+											<td width="20%"><label class="control-label">Customer Name</label></td>
+											<td width="30%"><?php echo $job_row['customer_name'];?></td>
+											<td width="20%"><label class="control-label">Address</label></td>
+											<td width="30%"><?php echo $job_row['address'];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Contact No.</label><br/><span class="red_small">(For SMS Update)</span></td>
+											<td><?php echo $job_row['contact_no'];?></td>
+											<td><label class="control-label">Alternate Contact No.</label></td>
+											<td><?php echo $job_row['alternate_no'];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">State</label></td>
+											<td><?php echo getAnyDetails($job_row["state_id"],"state","stateid","state_master",$link1);?></td>
+											<td><label class="control-label">Email</label></td>
+											<td><?php echo $cust_det[1];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">City</label></td>
+											<td><?php echo getAnyDetails($job_row["city_id"],"city","cityid","city_master",$link1);?></td>
+											<td><label class="control-label">Pincode</label></td>
+											<td><?php echo $job_row['pincode'];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Customer Category</label></td>
+											<td><?php echo $job_row['customer_type'];?></td>
+											<td><label class="control-label">Residence No</label></td>
+											<td><?php echo $cust_det[2];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Landmarks</label></td>
+											<td><?php echo $cust_det[0];?></td>
+											<td><label class="control-label"></label></td>
+											<td><?php ?></td>
+										</tr>
+									</tbody>
+								</table>
+							</div><!--close panel body-->
+						</div><!--close panel-->
+						<div class="panel panel-info table-responsive">
+							<div class="panel-heading"><i class="fa fa-desktop fa-lg"></i>&nbsp;&nbsp;Product Details</div>
+							<div class="panel-body">
+								<table class="table table-bordered" width="100%">
+									<tbody>
+										<tr>
+											<td width="20%"><label class="control-label">Product</label></td>
+											<td width="30%"><?php echo getAnyDetails($job_row["product_id"],"product_name","product_id","product_master",$link1);?></td>
+											<td width="20%"><label class="control-label">Brand</label></td>
+											<td width="30%"><?php echo getAnyDetails($job_row["brand_id"],"brand","brand_id","brand_master",$link1);?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Model</label></td>
+											<td><?=$job_row['model']?></td>
+											<td><label class="control-label">Date Of Installation</label></td>
+											<td><?=dt_format($product_det['installation_date'])?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label"><?php echo SERIALNO ?></label></td>
+											<td><?=$job_row['imei']?></td>
+											<td><label class="control-label">Escalations From</label></td>
+											<td><?=$job_row['call_type']?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Warranty Status</label></td>
+											<td><?=$job_row['warranty_status']?></td>
+											<td><label class="control-label">Job For</label></td>
+											<td><?=$job_row['call_for']?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Purchase Date</label></td>
+											<td><?=dt_format($job_row['dop'])?></td>
+											<td><label class="control-label">Warranty End Date</label></td>
+											<td><?=dt_format($job_row['warranty_end_date'])?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">AMC Number</label></td>
+											<td><?=$product_det['amc_no']?></td>
+											<td><label class="control-label">AMC Expiry Date </label></td>
+											<td ><?=dt_format($product_det['amc_end_date'])?></td>
+
+										</tr>
+										<tr>
+											<td><label class="control-label">Date Of Installation</label></td>
+											<td><?=dt_format($product_det['installation_date'])?></td>
+											<td><label class="control-label">Entity Name</label></td>
+											<td ><?php echo getAnyDetails($job_row['entity_type'],"name","id","entity_type",$link1);?></td>
+
+										</tr>
+										<tr>
+											<td><label class="control-label">Dealer Name</label></td>
+											<td><?=$job_row['dname']?></td>
+											<td><label class="control-label">Invoice No</label></td>
+											<td><?=$job_row['inv_no']?></td>
+										</tr>
+									</tbody>
+								</table>
+							</div><!--close panel body-->
+						</div><!--close panel-->
+
+
+						<div class="panel panel-info table-responsive">
+							<div class="panel-heading"><i class="fa fa-pencil-square-o fa-lg"></i>&nbsp;&nbsp;Observation</div>
+							<div class="panel-body">
+								<table class="table table-bordered" width="100%">
+									<tbody>
+
+										<tr>
+											<td width="20%"><label class="control-label">Assign Location</label></td>
+											<td width="30%"><?php echo getAnyDetails($job_row["current_location"],"locationname","location_code","location_master",$link1)." | ".$job_row["current_location"];?></td>
+											<td width="20%"><label class="control-label">Assign Eng. </label></td>
+											<td width="30%"><?php echo getAnyDetails($job_row["eng_id"],"locusername","userloginid","locationuser_master",$link1)." | ".$job_row["eng_id"];?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">VOC</label></td>
+											<td><?php echo getAnyDetails($job_row["cust_problem"],"voc_desc","voc_code","voc_master",$link1);?></td>
+											<td><?php 	$voc= explode(",",$job_row['cust_problem2']); 
+												$vocpresent   = count($voc);
+												if($vocpresent == '1'){
+													$name = getAnyDetails($voc[0],"voc_desc","voc_code","voc_master",$link1 );
+												}
+												else if($vocpresent >1){
+													$name ='';
+													for($i=0 ; $i<$vocpresent; $i++){					 
+														$name.=  getAnyDetails($voc[$i],"voc_desc","voc_code","voc_master",$link1 ).",";
+													}} echo $name;?></td>
+											<td><?=$job_row['cust_problem3']?></td>
+										</tr>
+										<tr>
+											<td><label class="control-label">Remark </label></td>
+											<td colspan=""><?=$job_row['remark']?></td>
+											<td><label class="control-label">Request Remarks </label></td>
+											<td colspan="3"><?=$job_row['app_reason']?></td>
+										</tr>
+											
+										<!-------------------------------------------------------------------------------------->
+										<tr >
+											<td><label class="control-label" style="color:#fb5a0c; font-weight: bold;">Serial/Warranty Images</label></td>
+											<td colspan="3">
+
+											<div style="float:left;"><div style="width: 100px; float:left; text-align:center; font-weight: bold;">Product Image</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Invoice Image</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Serial /Warranty Image</div></div>  
+                              
+                              <div style="clear: both;">
+                              <div style="float:left;">
+												
+												
+													<span>
+									<a href="<?php echo $dop_serial_change_row['product_img']; ?>" target="_blank"><img src="<?= $dop_serial_change_row['product_img'] ?>" alt="Smiley face" height="100" width="100" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" ></a>
+													</span>
+													
+													<span>
+									<a href="<?php echo $dop_serial_change_row['invoice_img']; ?>" target="_blank"><img src="<?= $dop_serial_change_row['invoice_img'] ?>" alt="Smiley face" height="100" width="100" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" ></a>
+													</span>
+													
+													<span>
+									<a href="<?php echo $dop_serial_change_row['serial_img']; ?>" target="_blank"><img src="<?= $dop_serial_change_row['serial_img'] ?>" alt="Smiley face" height="100" width="100" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" ></a>
+													</span>
+												
+													</div>
+													</div>
+											</td>
+										</tr>
+										<!-------------------------------------------------------------------------------------->
+
+
+										<?php 
+	$image_det = mysqli_query($link1,"SELECT * FROM image_upload_details  where job_no='".$job_row['job_no']."' and activity != 'Image Upload by app - DOPFreez' ");
+												while($row_image=mysqli_fetch_array($image_det)){?>  
+										<tr>
+											<td><label class="control-label"><?=$row_image['activity']?></label></td>
+											<td colspan="3"  >
+
+											<?php if($row_image['activity'] == "Image Upload by app"){ ?>
+											<div style=""><div style="width: 100px; float:left; text-align:center; font-weight: bold;">Wty Card</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Invoice</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Charger Install</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Serial /Warranty Images</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">Customer Signature</div><div style="width: 105px; float:left; text-align:center; font-weight: bold;">OCV Reading</div></div>
+											<?php } ?>
+											<div style="clear: both;">
+											<div style="float:left;">
+
+												<?php if ($row_image['img_url']!=""){
+													$four_str = substr($row_image['img_url'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+												<?php if($four_str == ".doc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
+												<span>
+													<a href="<?php echo $row_image['img_url']; ?>" target="_blank" > <u>Download Jobsheet</u>  </a>
+												</span>
+												<?php }else{ ?>
+												<span> 
+												<a href="<?php echo $row_image['img_url']; ?>" target="_blank" ><img src="<?=$row_image['img_url']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+												</span>
+												<?php } ?>
+												<?php 
+													} else {
+														echo "";
+													}
+												?>
+
+												<?php } if($row_image['img_url1']!="") {
+
+													$four_str = substr($row_image['img_url1'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url1'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+												<?php if($four_str == ".doc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
+												<span>
+													<a href="<?php echo $row_image['img_url1']; ?>" target="_blank" > <u>Download Warranty Card</u>  </a>
+												</span>
+												<?php }else{ ?>
+												<span> 
+												<a href="<?php echo $row_image['img_url1']; ?>" target="_blank" ><img src="<?=$row_image['img_url1']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+												</span>
+												<?php } ?>
+												<?php 
+													} else {
+														echo "";
+													}
+												?>	
+												<?php } if($row_image['img_url2']!="") {
+													$four_str = substr($row_image['img_url2'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url2'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+												<span> 
+												<a href="<?php echo $row_image['img_url2']; ?>" target="_blank" ><img src="<?=$row_image['img_url2']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+												</span>
+												<?php 
+														} else {
+														echo "";
+													}
+												?>		
+												<?php } if($row_image['img_url3']!="") {
+													$four_str = substr($row_image['img_url3'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url3'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+												<span> 
+												<a href="<?php echo $row_image['img_url3']; ?>" target="_blank" ><img src="<?=$row_image['img_url3']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+												</span>
+												<?php 
+														} else {
+														echo "";
+													}
+												?>			
+												<?php } if($row_image['img_url4']!="") {
+													$four_str = substr($row_image['img_url4'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url4'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+												<span> 
+												<a href="<?php echo $row_image['img_url4']; ?>" target="_blank" ><img src="<?=$row_image['img_url4']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+												</span>
+												<?php 
+														} else {
+														echo "";
+													}
+												?>				
+												<?php } if($row_image['img_url6']!="") {
+													$four_str = substr($row_image['img_url6'], -4);
+													//echo "<br><br>";
+													$five_str = substr($row_image['img_url6'], -5);
+													//echo "<br><br>";
+													$four_str_ext = substr($four_str, 0, 1);
+													//echo "<br><br>";
+													$five_str_ext = substr($five_str, 0, 1);
+													//echo "<br><br>";
+													if($four_str_ext == "." || $five_str_ext == "." ) {
+												?>
+													<span> 
+													<a href="<?php echo $row_image['img_url6']; ?>" target="_blank" ><img src="<?=$row_image['img_url6']?>" onMouseOver="bigImg(this)" onMouseOut="normalImg(this)" alt="Smiley face" height="100" width="100"></a>
+													</span>
+												<?php 
+													} else {
+													echo "";
+												}
+												}
+												?>		
+												</div>
+												</div>
+											</td>
+										</tr>
+										<?php } ?>
+									</tbody>
+								</table>
+							</div><!--close panel body-->
+						</div><!--close panel-->
+						<div class="panel panel-info table-responsive">
+							<div class="panel-heading"><i class="fa fa-history fa-lg"></i>&nbsp;&nbsp;History</div>
+							<div class="panel-body">
+								<table class="table table-bordered" width="100%">
+									<thead>	
+										<tr>
+											<td width="15%"><strong>Location</strong></td>
+											<td width="10%"><strong>Activity</strong></td>
+											<td width="15%"><strong>Outcome</strong></td>
+											<td width="10%"><strong>Warranty</strong></td>
+											<td width="10%"><strong>Status</strong></td>
+											<td width="10%"><strong>Update By</strong></td>
+											<td width="25%"><strong>Remark</strong></td>
+											<td width="15%"><strong>Update on</strong></td>
+										</tr>
+									</thead>
+									<tbody>
+										<?php
+										$res_jobhistory = mysqli_query($link1,"SELECT * FROM call_history where job_no='".$docid."'");
+										while($row_jobhistory = mysqli_fetch_assoc($res_jobhistory)){
+										?>
+										<tr>
+											<td><?=$row_jobhistory['location_code']?></td>
+											<td><?=$row_jobhistory['activity']?></td>
+											<td><?=$row_jobhistory['outcome']?></td>
+											<td><?=$row_jobhistory['warranty_status']?></td>
+											<td><?=$row_jobhistory['status']?></td>
+											<td><?=$row_jobhistory['updated_by']?></td>
+											<td><?=$row_jobhistory['remark']?></td>
+											<td><?=$row_jobhistory['update_date']?></td>
+										</tr>
+										<?php
+											}
+										?>
+										<?php   if($job_row['status'] == '9' && $job_row['sub_status'] != '91')  {?>
+										<tr>
+											<td width="100%" align="center" colspan="8"><input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='job_list_doa.php?daterange=<?=$_REQUEST['daterange']?>&product_name=<?=$_REQUEST['product_name']?>&brand=<?=$_REQUEST['brand']?>&modelid=<?=$_REQUEST['modelid']?><?=$pagenav?>'"></td>
+										</tr>
+										<?php  } ?>
+									</tbody>
+								</table>
+							</div><!--close panel body-->
+						</div><!--close panel-->
+
+						<!--approval for EP-->
+						<?php if($job_row['status'] == '84' && $job_row['sub_status'] == '84'){ ?>
+						<form id="frm1" name="frm1" method="post" enctype="multipart/form-data" >
+							<div class="panel panel-info table-responsive">
+								<div class="panel-heading"><i class="fa fa-pencil-square-o fa-lg"></i>&nbsp;&nbsp;Replacement Request Action</div>
+								<div class="panel-body">
+									<table class="table table-bordered" width="100%">
+										<tbody>
+											<tr>
+												<td width="20%"><label class="control-label">Sold/Unsold</label></td>
+												<td width="30%"><?php echo $job_row['sold_unsold']; ?><input type="hidden" name="sold_unsold" id="sold_unsold" value="<?php echo $job_row['sold_unsold']; ?>" /></td>
+												<td width="20%"><label class="control-label">Call Type</label></td>
+												<td width="30%"><?php echo $job_row['repeatcall']; ?></td>
+											</tr>	
+
+											<tr>
+												<td width="20%"><label class="control-label">Replacement Point</label></td>
+												<td width="30%">
+													<select id="repl_type" name="repl_type" class="form-control required" required onchange="check_repl_type_div();" >
+														<!---<option value="">Please Select</option>---->
+														<option value="By Location">By Location</option>
+														<option value="By Dealer">By Dealer</option>
+													</select>
+												</td>
+												<td width="20%"><label class="control-label"></label></td>
+												<td width="30%"></td>
+											</tr>
+										</tbody>
+									</table>
+
+
+									<!--------------------------------------------------------------->
+									<div id="dlrcls" style="display: none;">
+									<table class="table table-bordered" width="100%">
+										<tbody>		
+											<tr width="100%">
+												<td width="20%"><label class="control-label" >Dealer Name</label></td>
+												<td width="30%">
+													<select id="repl_dealer" name="repl_dealer" class="form-control required" required >
+														<option value="">Please Select</option>
+														<?php
+															$partner_loc_query="SELECT sap_id,name,type FROM retailer_distibuter_master where status = '1' and pincode='".$job_row['pincode']."' order by name";
+												
+															$check_partner_loc=mysqli_query($link1,$partner_loc_query);
+															while($partner_loc = mysqli_fetch_array($check_partner_loc)){
+														?>
+														<option value="<?=$partner_loc['sap_id']?>"><?=$partner_loc['name']." | ".$partner_loc['sap_id']." | ".$partner_loc['type']?></option>
+														<?php
+															}
+														?>
+													</select>
+												</td>
+												<td width="20%"><label class="control-label" ></label></td>
+												<td width="30%"></td>
+											</tr>
+
+											<tr width="100%">
+												<td width="20%"><label class="control-label" >Replace Serial No (Dealer)</label></td>
+												<td width="30%">
+													<input type="text" name="replace_serial_no_dlr" id="replace_serial_no_dlr" class="form-control alphanumeric required" required minlength="10" maxlength="18" onblur="displaySerialDataCheckDlr();" onkeyup="displaySerialDataCheckDlr();" />
+												</td>
+												<td width="20%"><label class="control-label" >Replace Model (Dealer)</label></td>
+												<td width="30%" id="modeldivdlr">
+													<select id="replace_model_id_dlr" name="replace_model_id_dlr" class="form-control required" required >
+														<option value="">Please Select</option>
+													</select>
+													
+												</td>
+											</tr>
+
+											<tr>
+												<td><label class="control-label" >Upload Warranty Card (Dealer)</label></td>
+												<td><input type="file" class="form-control required" required name="upd_doc_dlr" id="upd_doc_dlr" onChange="return validateImage('upd_doc_dlr','2');"  accept=".png,.jpg,.jpeg,.gif" /><div id="errmsg2"></div></td>
+												<td><label class="control-label" >Upload Product Sr No Image (Dealer)</label></td>
+												<td><input type="file" class="form-control" name="upd_doc_dlr1" id="upd_doc_dlr1" onChange="return validateImage('upd_doc_dlr1','3');"  accept=".png,.jpg,.jpeg,.gif" /><div id="errmsg3"></div></td>
+											</tr>
+										</tbody>
+									</table>	
+									</div>	
+									<!--------------------------------------------------------------->
+
+											<?php //if($job_row['sold_unsold']=="Sold"){ ?> 
+									<div id="loccls">		
+									<table class="table table-bordered" width="100%">
+										<tbody>	
+												<tr width="100%">
+													<td width="20%"><label class="control-label" >Replace Serial No</label></td>
+													<td width="30%">
+														<!----<input type="text" name="replace_serial_no" id="replace_serial_no" class="form-control alphanumeric required" required minlength="10" maxlength="18" onblur="displaySerialDataCheck();" onkeyup="displaySerialDataCheck();" />----->
+
+														<!--<select id="replace_serial_no" name="replace_serial_no" class="form-control required selectpicker" data-live-search="true" required onchange="displaySerialDataCheck();" >-->
+															<select id="replace_serial_no" name="replace_serial_no" class="form-control required selectpicker" data-live-search="true" required  >
+															<option value="">Please Select</option>
+															<?php 
+																$sr_query="SELECT imei1 FROM imei_details_asp where status = '1' and location_code = '".$job_row['current_location']."' and stock_type in ('okqty','OK') and imei1 != '' and partcode in (select partcode from partcode_master where status = '1' and product_id in ('5','9','10')) ";
+																$check_sr=mysqli_query($link1,$sr_query);
+																while($sr_name = mysqli_fetch_array($check_sr)){
+															?>
+																<option value="<?php echo $sr_name['imei1']; ?>"><?php echo $sr_name['imei1']; ?></option>
+															<?php } ?>														
+														</select>
+
+													</td>
+													<td width="20%"><label class="control-label" >Replace Model</label></td>
+													<td width="30%" id="modeldiv">
+														<!--<select id="replace_model_id" name="replace_model_id" class="form-control required" required >
+															<option value="">Please Select</option>
+														</select>-->
+														
+														<select id="replace_model_id" name="replace_model_id" class="form-control required" required >
+															<option value="">Please Select</option>
+															<?php 
+																$dept_query="SELECT model_id,model,wp FROM model_master where status = '1' and product_id in ('5','9','10') order by model ";
+																$check_dept=mysqli_query($link1,$dept_query);
+																while($model_name = mysqli_fetch_array($check_dept)){
+															?>
+																<option value="<?php echo $model_name['model_id']; ?>"><?php echo $model_name['model']." | ".$model_name['model_id']; ?></option>
+															<?php } ?>														
+														</select>
+													</td>
+												</tr>
+
+												<tr>
+													<td><label class="control-label" >Upload Warranty Card</label></td>
+													<td><input type="file" class="form-control required" required name="upd_doc" id="upd_doc" onChange="return validateImage('upd_doc','0');"  accept=".png,.jpg,.jpeg,.gif" /><div id="errmsg0"></div></td>
+													<td><label class="control-label" >Upload Product Sr No Image</label></td>
+													<td><input type="file" class="form-control" name="upd_doc1" id="upd_doc1" onChange="return validateImage('upd_doc1','1');"  accept=".png,.jpg,.jpeg,.gif" /><div id="errmsg1"></div></td>
+												</tr>
+											<?php /* }else{ ?>
+												<tr>
+													<td colspan="4" style="text-align: center; color: brown; font-weight: bold; background-color: antiquewhite;">In case of UNSOLD - Replacement Serial No is not required</td>
+												</tr>	
+											<?php } */ ?>
+
+											<tr>
+												<td width="20%"><label class="control-label">Pick Up By</label></td>
+												<td width="30%"><input type="text" class="form-control required" required name="pick_up_by" id="pick_up_by" value="" /></td>
+												<td width="20%"><label class="control-label">Transport Name</label></td>
+												<td width="30%">
+													<select id="transport_name" name="transport_name" class="form-control required" required >
+														<option value="">Please Select</option>
+														<option value="Self">Self</option>
+														<option value="RLP">RLP</option>
+														<option value="Transport">Transport</option>
+														<option value="Pvt Vehicle">Pvt Vehicle</option>
+													</select>	
+												</td>
+											</tr>
+
+											<tr>
+												<td width="20%"><label class="control-label">Vehicle No</label></td>
+												<td width="30%"><input type="text" class="form-control required" required name="vehicle_no" id="vehicle_no" value="" /></td>
+												<td width="20%"><label class="control-label">Contact Person Name</label></td>
+												<td width="30%"><input type="text" class="form-control required" required name="person_name" id="person_name" value="" /></td>
+											</tr>
+
+											<tr>
+												<td width="20%"><label class="control-label">Contact Person No</label></td>
+												<td width="30%"><input type="text" class="form-control required" required name="person_no" id="person_no" value="" /></td>
+												<td width="20%"><label class="control-label"><!---Delivery & Pickup OTP---></label></td>
+												<td width="30%"><!---<input type="text" class="form-control required" required name="delivery_otp" id="delivery_otp" value="" />----></td>
+											</tr>
+										</tbody>							
+									</table>
+									</div>
+							
+									<table class="table table-bordered" width="100%">
+										<tbody>
+											<tr>
+												<td width="100%" align="center" colspan="8"><input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='job_list_repl_btr_sr_loc.php?daterange=<?=$_REQUEST['daterange']?>&product_name=<?=$_REQUEST['product_name']?>&brand=<?=$_REQUEST['brand']?>&modelid=<?=$_REQUEST['modelid']?><?=$pagenav?>'"> <input type="submit" id="update" name="update" value="Update" class="btn<?=$btncolor?>"></td>
+											</tr>     
+										</tbody>
+									</table>
+								</div><!--close panel body-->
+							</div><!--close panel-->
+						</form>
+						<?php } ?>
+					</div><!--close panel group-->
+				</div><!--close col-sm-9-->
+			</div><!--close row content-->
+		</div><!--close container-fluid-->
+		<div id="loader"></div>
+		<?php
+		include("../includes/footer.php");
+		include("../includes/connection_close.php");
+		?>
+	</body>
+</html>

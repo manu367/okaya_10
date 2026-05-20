@@ -1,0 +1,19 @@
+<?php 
+/**  * Creates fault detail data as JSON  */    
+include_once 'db_functions.php';     
+$db = new DB_Functions();     
+$users = $db->getCityMaster_State($stateid);     
+$a = array();     
+$b = array();    
+if ($users != false){         
+while ($row = mysqli_fetch_array($users)) 
+{                     
+$b["_id"] = $row["cityid"];
+$b["pin_code"] = $row["pincode"];
+$b["city_name"] = $row["city"];
+$b["state_id"]=$row["stateid"];       
+array_push($a,$b);         
+}         
+echo json_encode($a);     
+} 
+?>

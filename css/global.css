@@ -1,0 +1,255 @@
+    /* Overlay */
+.invoice-modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(6px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 9999;
+}
+
+/* Active state */
+.invoice-modal.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Modal box */
+/*.custom-modal {*/
+/*    background: #fff;*/
+/*    width: 100%;*/
+/*    max-width: 1000px;*/
+/*    border-radius: 12px;*/
+/*    padding: 25px;*/
+/*    position: relative;*/
+
+/*    transform: translateY(40px) scale(0.95);*/
+/*    opacity: 0;*/
+/*    transition: all 0.4s ease;*/
+/*}*/
+.custom-modal {
+    background: #fff;
+    width: 95vw;              /* almost full screen */
+    max-width: 1400px;        /* desktop invoice width */
+    height: 90vh;             /* vertical control */
+    border-radius: 12px;
+    padding: 20px;
+    position: relative;
+
+    display: flex;
+    flex-direction: column;
+
+    transform: translateY(40px) scale(0.95);
+    opacity: 0;
+    transition: all 0.4s ease;
+}
+
+/* Animate in */
+.invoice-modal.active .custom-modal {
+    transform: translateY(0) scale(1);
+    opacity: 1;
+}
+
+.custom-modal h2 {
+    margin: 0 0 15px;
+    font-weight: 600;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    border: none;
+    background: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: #555;
+}
+.modal-close:hover {
+    color: #000;
+}
+.modal-body {
+    max-height: 70vh;
+    overflow-y: auto;
+}
+.invoice-ui {
+    font-size: 13px;
+}
+.table-responsive {
+    overflow-x: auto;
+    white-space: nowrap;
+}
+.invoice-table {
+    table-layout: fixed;
+    min-width: 1500px; /* force horizontal scroll */
+}
+
+.invoice-table th,
+.invoice-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+/* Column widths */
+.invoice-table th:nth-child(1),
+.invoice-table td:nth-child(1) { width: 180px; } /* Product */
+
+.invoice-table th:nth-child(2),
+.invoice-table td:nth-child(2) { width: 120px; } /* Brand */
+
+.invoice-table th:nth-child(3),
+.invoice-table td:nth-child(3) { width: 140px; } /* Model */
+
+.invoice-table th:nth-child(4),
+.invoice-table td:nth-child(4) { width: 160px; } /* Part */
+
+.invoice-table th:nth-child(5),
+.invoice-table td:nth-child(5) { width: 150px; } /* Serial No */
+
+.invoice-table th:nth-child(6),
+.invoice-table td:nth-child(6) { width: 80px; }  /* Qty */
+
+.invoice-table th:nth-child(7),
+.invoice-table td:nth-child(7) { width: 100px; } /* Price */
+
+.invoice-table th:nth-child(8),
+.invoice-table td:nth-child(8) { width: 100px; } /* Cost */
+
+.invoice-table th:nth-child(9),
+.invoice-table td:nth-child(9) { width: 110px; } /* Discount */
+
+.invoice-table th:nth-child(10),
+.invoice-table td:nth-child(10) { width: 150px; } /* Value After Discount */
+
+.invoice-table th:nth-child(11),
+.invoice-table td:nth-child(11) { width: 90px; } /* IGST % */
+
+.invoice-table th:nth-child(12),
+.invoice-table td:nth-child(12) { width: 120px; } /* IGST Amt */
+
+.invoice-table th:nth-child(13),
+.invoice-table td:nth-child(13) { width: 120px; } /* Total */
+.invoice-table select,
+.invoice-table input {
+    width: 100% !important;
+    min-width: 100%;
+    box-sizing: border-box;
+}
+
+.invoice-table thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+}
+
+
+.invoice-table th {
+    background: #337ab7;
+    color: #fff;
+    text-align: center;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.invoice-table td {
+    padding: 4px;
+}
+
+.invoice-table input,
+.invoice-table select {
+    height: 32px;
+    font-size: 12px;
+}
+
+.add-row {
+    margin: 10px 0;
+}
+
+.add-icon {
+    font-size: 18px;
+    color: green;
+    font-weight: bold;
+}
+
+.totals-section {
+    margin-top: 15px;
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.total-line label {
+    font-weight: 600;
+}
+
+.total-line input {
+    width: 150px;
+    text-align: right;
+}
+
+.grand-total label {
+    font-size: 15px;
+}
+
+.grand-total input {
+    font-weight: bold;
+    background: #f5f5f5;
+}
+
+/* Error modal tweak */
+.error-modal {
+    border-top: 5px solid #d9534f;
+    animation: shake 0.4s ease;
+}
+
+.error-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.error-header h2 {
+    margin: 0;
+    font-size: 20px;
+    color: #d9534f;
+}
+
+.error-icon {
+    font-size: 26px;
+}
+
+.error-text {
+    font-size: 15px;
+    color: #444;
+    background: #fdf2f2;
+    padding: 12px;
+    border-left: 4px solid #d9534f;
+    border-radius: 6px;
+}
+
+.error-footer {
+    text-align: right;
+    margin-top: 15px;
+}
+
+/* Subtle shake animation */
+@keyframes shake {
+    0% { transform: translateX(0); }
+    25% { transform: translateX(-6px); }
+    50% { transform: translateX(6px); }
+    75% { transform: translateX(-4px); }
+    100% { transform: translateX(0); }
+}
+

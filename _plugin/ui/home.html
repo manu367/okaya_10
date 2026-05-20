@@ -1,0 +1,139 @@
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Student Learning Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="bg-[#f7faff] text-gray-700">
+
+<!-- TOP NAVBAR -->
+<header class="bg-white sticky top-0 z-50 shadow-sm">
+    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+
+        <div class="text-xl font-semibold text-blue-600">
+            Learnify
+        </div>
+
+        <nav class="hidden md:flex gap-6 text-sm">
+            <a href="#" class="text-blue-600 font-medium">Home</a>
+            <a href="#" class="hover:text-blue-600">My Courses</a>
+            <a href="#" class="hover:text-blue-600">Progress</a>
+            <a href="#" class="hover:text-blue-600">Explore</a>
+        </nav>
+
+        <div class="flex items-center gap-5 relative">
+            <!-- Notification -->
+            <button onclick="toggleDropdown('notify')" class="relative text-xl">
+                🔔
+                <span class="absolute -top-1 -right-1 bg-blue-500 text-white text-xs px-1 rounded-full">2</span>
+            </button>
+
+            <div id="notify" class="hidden absolute right-12 top-12 w-64 bg-white rounded-xl shadow">
+                <div class="p-4 font-semibold border-b">Notifications</div>
+                <ul class="text-sm">
+                    <li class="px-4 py-2 hover:bg-gray-50">📘 New lesson added</li>
+                    <li class="px-4 py-2 hover:bg-gray-50">📝 Assignment due tomorrow</li>
+                </ul>
+            </div>
+
+            <!-- Profile -->
+            <button onclick="toggleDropdown('profile')" class="flex items-center gap-2">
+                <img src="https://i.pravatar.cc/40" class="rounded-full">
+                <span class="hidden sm:block font-medium">Student</span>
+            </button>
+
+            <div id="profile" class="hidden absolute right-0 top-12 w-40 bg-white rounded-xl shadow">
+                <a class="block px-4 py-2 hover:bg-gray-50" href="#">Profile</a>
+                <a class="block px-4 py-2 hover:bg-gray-50" href="#">Settings</a>
+                <a class="block px-4 py-2 text-red-500 hover:bg-gray-50" href="#">Logout</a>
+            </div>
+        </div>
+
+    </div>
+</header>
+
+<!-- MAIN CONTENT -->
+<main class="max-w-7xl mx-auto px-6 py-10 space-y-10">
+
+    <!-- CONTINUE LEARNING -->
+    <section class="bg-[#fffaf0] rounded-2xl p-6 flex flex-col md:flex-row justify-between items-center shadow-sm">
+        <div>
+            <p class="text-sm text-blue-600 mb-1">Continue Learning</p>
+            <h2 class="text-2xl font-semibold">Full Stack Web Development</h2>
+            <p class="text-sm text-gray-500 mt-2">Lesson 12 • APIs & Backend</p>
+
+            <div class="mt-4 w-full bg-gray-200 h-2 rounded-full">
+                <div class="bg-blue-500 h-2 rounded-full w-[65%]"></div>
+            </div>
+        </div>
+
+        <button class="mt-6 md:mt-0 bg-blue-500 text-white px-6 py-3 rounded-xl hover:bg-blue-600 transition">
+            Resume
+        </button>
+    </section>
+
+    <!-- MY COURSES -->
+    <section>
+        <h3 class="text-xl font-semibold mb-4">My Courses</h3>
+
+        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+
+            <div class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition">
+                <h4 class="font-medium">JavaScript Mastery</h4>
+                <p class="text-sm text-gray-500 mt-1">Progress: 80%</p>
+                <div class="mt-3 bg-gray-200 h-2 rounded">
+                    <div class="bg-blue-400 h-2 rounded w-[80%]"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition">
+                <h4 class="font-medium">Data Structures</h4>
+                <p class="text-sm text-gray-500 mt-1">Progress: 40%</p>
+                <div class="mt-3 bg-gray-200 h-2 rounded">
+                    <div class="bg-blue-400 h-2 rounded w-[40%]"></div>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition">
+                <h4 class="font-medium">Database Design</h4>
+                <p class="text-sm text-gray-500 mt-1">Progress: 100%</p>
+                <div class="mt-3 bg-gray-200 h-2 rounded">
+                    <div class="bg-green-400 h-2 rounded w-full"></div>
+                </div>
+            </div>
+
+        </div>
+    </section>
+
+    <!-- UPCOMING TASKS -->
+    <section>
+        <h3 class="text-xl font-semibold mb-4">Upcoming Tasks</h3>
+
+        <div class="bg-white rounded-xl p-6 shadow-sm space-y-3">
+            <div class="flex justify-between">
+                <span>📝 Assignment: REST API</span>
+                <span class="text-sm text-red-500">Tomorrow</span>
+            </div>
+            <div class="flex justify-between">
+                <span>🧠 Quiz: JavaScript</span>
+                <span class="text-sm text-yellow-500">In 2 days</span>
+            </div>
+        </div>
+    </section>
+
+</main>
+
+<!-- JS -->
+<script>
+    function toggleDropdown(id) {
+        document.getElementById(id).classList.toggle('hidden');
+    }
+</script>
+
+</body>
+</html>
