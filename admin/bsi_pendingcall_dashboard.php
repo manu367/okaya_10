@@ -211,7 +211,7 @@
  */
 
 require_once("../includes/config.php");
-require_once ("../container/BsiContainer.php");
+require_once ("BsiContainer.php");
 global $link1;
 $arrstate = getAccessState($_SESSION['userid'],$link1);
 $access_brand = getAccessBrand($_SESSION['userid'],$link1);
@@ -227,9 +227,7 @@ $segment=$_REQUEST['segment']??'';
 $sub_segment=$_REQUEST['sub_segment']??'';
 
 $show=["status"=>false, "data"=>null];
-
-
-$pagination="bsi_pending_call_dashboard-grid-data.php";
+$pagination="bsi_pending_call_dashboard-grid-data_copy.php";
 $bsi_pending_export="bsi_pending_export.php";
 
 ?>

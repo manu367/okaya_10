@@ -214,7 +214,7 @@ class DashoardLaoder_1
                 DATEDIFF(NOW(), jd.open_date) as aging_days
             FROM jobsheet_data jd
             WHERE jd.eng_id = '{$engId}'
-              AND jd.status IN ('0','1','2','3','7','81')
+              AND jd.status IN ('1','2','3','7','81')
               {$where}
         ";
 
@@ -292,7 +292,7 @@ class DashoardLaoder_1
               AND au.status='1' 
               AND ar.status='Y' 
               {$condition}
-            GROUP BY au.sapid
+            GROUP BY au.username
         ";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];

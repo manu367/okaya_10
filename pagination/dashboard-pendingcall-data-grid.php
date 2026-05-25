@@ -2,12 +2,34 @@
 require_once("../includes/config.php");
 require_once("dashboard-pendingcall-dbops.php");
 global $link1;
+$arrstate = getAccessState($_SESSION['userid'],$link1);
+function loaderUser_12($link1,$sapid,$userid){
+    $restunrData=['type'=>'','data'=>''];
+    $sql="select sapid,username,name , designation_id from admin_users where sapid='$sapid' and username='$userid'";
+    $result=mysqli_query($link1,$sql);
+    if(!$result){
+        exit('Error'.__LINE__);
+    }
+    if(mysqli_num_rows($result)===0){
+        exit('Error'.__LINE__);
+    }
+    $row=mysqli_fetch_assoc($result);
+    if($row['designation_id']==='45'){
+        $restunrData['type']='bsi';
+    }else{
+        $restunrData['type']='admin';
+    }
+    $restunrData['data']=$row;
+    return $restunrData;
+}
 
 $access_brand = getAccessBrand($_SESSION['userid'],$link1);
-$arrstate = getAccessState($_SESSION['userid'],$link1);
 $access_product = getAccessProduct($_SESSION['userid'],$link1);
 
 
+$userid=$_SESSION['userid']??'';
+$sapid=$_SESSION['sapid']??'';
+$user=loaderUser_12($link1,$sapid,$userid);
 
 header("Content-type: application/json");
 
@@ -18,6 +40,26 @@ header("Content-type: application/json");
  */
 class FormInputHandling{
     public $wrapper_Data=[];
+    public function giveRangeDataForBSI($link1,$arrstate,$access_product,$condition=[]){
+        $bsi=new BSIFetchingFromDBMetaData($link1,$condition['bsi']);
+        $inputresponse=[];
+        $inputresponse['data_range']=[
+            0=>"7",
+            1=>"15",
+            2=>"30",
+            3=>"45",
+            4=>"90",
+        ];
+        $inputresponse['zone']=$bsi->zoneDisplay($condition['bsi']);
+        $inputresponse['zone_wise_state']=$bsi->getState($condition['bsi'],$arrstate);
+        $inputresponse['bsi']=$bsi->getBSI($condition['bsi']);
+        $inputresponse['enginnertype']=DataFetchingFromDB::enginnerType($link1);
+        $inputresponse['poduct']=DataFetchingFromDB::getAllProducts($link1, $access_product);
+        $inputresponse['all_busket']=[];
+        $inputresponse['status']=[0=>"Active", 1=>"Pending"];
+        return ($inputresponse);
+    }
+
     public function giveRangeData($link1,$arrstate,$access_product){
         $inputresponse=[];
         $inputresponse['data_range']=[
@@ -38,11 +80,12 @@ class FormInputHandling{
     }
 
     public static function cardData($link1,$condition){
-
+        $pending_2_days=DataFetchingFromDB::pendingDays($link1,$condition);
         return [
             "total_pending_calls"=>DataFetchingFromDB::totoalPendingCall($link1,$condition),
             "avg_aging"=>DataFetchingFromDB::avgAging($link1,$condition),
-            "pending_days"=>DataFetchingFromDB::pendingDays($link1,$condition),
+            "pending_days"=>$pending_2_days['total'],
+            "pending_days_percentage"=>$pending_2_days['percentage'],
             "high_priority_pending"=>DataFetchingFromDB::high_priority_pending($link1,$condition),
         ];
     }
@@ -101,6 +144,12 @@ class FormInputHandling{
 
 $formInputhandling=new FormInputHandling();
 if(isset($_GET['form_input_data'])){
+    $condition=[];
+    if($user['type']==='bsi'){
+        $condition['bsi']=$user['data']['sapid'];
+        echo json_encode($formInputhandling->giveRangeDataForBSI($link1,$arrstate,$access_product,$condition));
+        exit();
+    }
     echo json_encode($formInputhandling->giveRangeData($link1,$arrstate,$access_product));
     exit();
 }
@@ -121,6 +170,7 @@ if(isset($_REQUEST['form_submit'])){
 
 
     $wrapper_data['cards_data']=FormInputHandling::cardData($link1,$condition);
+
     $wrapper_data['chart_details']=[
         'bar_chart'=>FormInputHandling::giveBarChartData($link1,$condition),
         'column_chart'=>FormInputHandling::giveColumnChartData($link1,$condition),

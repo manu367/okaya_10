@@ -31,24 +31,22 @@ class DashoardLaoder_Export
     public function bsiLoader($condition = [])
     {
         $data = [];
-
         $bsiCondition = "";
+
         if (!empty($condition['bsi'])) {
-            $bsi = $condition['bsi'];
+            $bsi = mysqli_real_escape_string($this->connection, $condition['bsi']);
             $bsiCondition .= " AND au.sapid = '{$bsi}' ";
         }
         if (!empty($condition['zone'])) {
-            $zone = $condition['zone'];
+            $zone = (int)$condition['zone'];
             $bsiCondition .= " AND sm.zoneid= '{$zone}' ";
         }
-
         if (!empty($condition['state'])) {
-            $state = $condition['state'];
+            $state = (int)$condition['state'];
             $bsiCondition .= " AND sm.stateid= '{$state}' ";
         }
 
         $allBSI = $this->getAllBSI($bsiCondition);
-
         if (empty($allBSI)) return [];
 
         foreach ($allBSI as $bsi) {
@@ -56,14 +54,27 @@ class DashoardLaoder_Export
             $bsiName = $bsi['name'];
             $bsiUser = $bsi['username'];
             $zone    = $this->getZone($bsiUser, $condition);
+
+            // FIX: Zone/State se engineer filter nahi — sirf engineer filter pass karo
             $engineers    = $this->fetchEngineers($bsiId, $condition);
             $engineerRows = [];
             $bsiTotals    = $this->emptyBucket();
+
             foreach ($engineers as $eng) {
                 $engId   = $eng['userloginid'];
                 $engName = $eng['locusername'];
-                $jobs    = $this->fetchJobs($engId, $condition);
+
+                // FIX: Job fetch ke liye sirf ye conditions pass karo, zone/state nahi
+                $jobCondition = [
+                    'date_range'  => $condition['date_range']  ?? '',
+                    'segment'     => $condition['segment']     ?? '',
+                    'sub_segment' => $condition['sub_segment'] ?? '',
+                    'enginner'    => $condition['enginner']    ?? '',
+                ];
+
+                $jobs = $this->fetchJobs($engId, $jobCondition);
                 if (empty($jobs)) continue;
+
                 $engData = $this->emptyBucket();
 
                 foreach ($jobs as $job) {
@@ -72,10 +83,10 @@ class DashoardLaoder_Export
                     $bucket = $this->getBucket($aging);
                     if ($bucket === false) continue;
 
-                    if ($status == '2')       { $engData['assigned'][$bucket]++;    $engData['assigned_total']++; }
-                    elseif ($status == '3')   { $engData['pna'][$bucket]++;         $engData['pna_total']++; }
-                    elseif ($status == '7')   { $engData['wip'][$bucket]++;         $engData['wip_total']++; }
-                    elseif ($status == '81')  { $engData['replacement'][$bucket]++; $engData['replacement_total']++; }
+                    if ($status == '2')      { $engData['assigned'][$bucket]++;    $engData['assigned_total']++; }
+                    elseif ($status == '3')  { $engData['pna'][$bucket]++;         $engData['pna_total']++; }
+                    elseif ($status == '7')  { $engData['wip'][$bucket]++;         $engData['wip_total']++; }
+                    elseif ($status == '81') { $engData['replacement'][$bucket]++; $engData['replacement_total']++; }
 
                     $engData['grand_total']++;
                 }
@@ -99,14 +110,15 @@ class DashoardLaoder_Export
     private function getAllBSI($condition = "")
     {
         $sql = "
-            SELECT au.* FROM `access_region` ar 
-                left JOIN admin_users au 
-                    ON ar.userid=au.username 
-                Left JOIN state_master sm 
-                    ON ar.stateid=sm.stateid 
-             WHERE au.designation_id='45' and au.status='1' and ar.status='Y' 
-               $condition
-             GROUP BY au.username
+            SELECT au.sapid, au.username, au.name, au.status 
+            FROM access_region ar 
+            LEFT JOIN admin_users au ON ar.userid = au.username 
+            LEFT JOIN state_master sm ON ar.stateid = sm.stateid 
+            WHERE au.designation_id='45' 
+              AND au.status='1' 
+              AND ar.status='Y' 
+              {$condition}
+            GROUP BY au.sapid
         ";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
@@ -133,18 +145,16 @@ class DashoardLaoder_Export
 
     private function fetchEngineers($bsiId, $condition = [])
     {
+        // FIX: Zone/State filter hata diya — DashoardLaoder_1 ki tarah sirf bsiId + engineer filter
+        $bsiId = mysqli_real_escape_string($this->connection, $bsiId);
         $where = " WHERE lum.mapped_bsi = '{$bsiId}' ";
-        if (!empty($condition['zone'])) {
-            $z     = (int)$condition['zone'];
-            $where .= " AND lum.stateid IN (SELECT stateid FROM state_master WHERE zoneid='{$z}') ";
-        }
-        if (!empty($condition['state']))   $where .= " AND lum.stateid     = '" . (int)$condition['state'] . "' ";
+
         if (!empty($condition['enginner'])) {
             $e     = mysqli_real_escape_string($this->connection, $condition['enginner']);
             $where .= " AND lum.userloginid = '{$e}' ";
         }
 
-        $sql="SELECT * FROM locationuser_master lum {$where}";
+        $sql    = "SELECT lum.locusername, lum.userloginid FROM locationuser_master lum {$where}";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
         $rows = [];
@@ -154,32 +164,33 @@ class DashoardLaoder_Export
 
     private function fetchJobs($engId, $condition = [])
     {
+        // FIX: Zone/State filter hata diya — BSI/Engineer already filter ho chuke hain upar se
+        $engId = mysqli_real_escape_string($this->connection, $engId);
         $where = "";
-        if (!empty($condition['date_range']))  $where .= " AND jd.open_date >= NOW() - INTERVAL " . (int)$condition['date_range'] . " DAY ";
-        if (!empty($condition['zone'])) {
-            $z     = (int)$condition['zone'];
-            $where .= " AND jd.state_id IN (SELECT stateid FROM state_master WHERE zoneid='{$z}') ";
+
+        if (!empty($condition['date_range'])) {
+            $where .= " AND jd.open_date >= NOW() - INTERVAL " . (int)$condition['date_range'] . " DAY ";
         }
-        if (!empty($condition['state']))      $where .= " AND jd.state_id  = '" . (int)$condition['state']   . "' ";
         if (!empty($condition['enginner'])) {
             $e     = mysqli_real_escape_string($this->connection, $condition['enginner']);
             $where .= " AND jd.eng_id = '{$e}' ";
         }
-        if (!empty($condition['bsi'])) {
-            $b     = mysqli_real_escape_string($this->connection, $condition['bsi']);
-            $where .= " AND jd.eng_id IN (SELECT userloginid FROM locationuser_master WHERE mapped_bsi='{$b}') ";
-        }
         if (!empty($condition['segment'])) {
-            $seg = $condition['segment'];
+            $seg = (string)$condition['segment'];
             if ($seg === '1')     $where .= " AND jd.product_id IN ('1') ";
             elseif ($seg === '2') $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
             elseif ($seg === '3') $where .= " AND jd.product_id IN ('6','10','11','12') ";
         }
-        if (!empty($condition['sub_segment'])) $where .= " AND jd.product_id = '" . (int)$condition['sub_segment'] . "' ";
+        if (!empty($condition['sub_segment'])) {
+            $where .= " AND jd.product_id = '" . (int)$condition['sub_segment'] . "' ";
+        }
 
+        // FIX: Status '0' add kiya — DashoardLaoder_1 ki tarah
         $sql    = "SELECT jd.*, DATEDIFF(NOW(), jd.open_date) as aging_days
                    FROM jobsheet_data jd
-                   WHERE jd.eng_id = '{$engId}' AND jd.status IN ('1','2','3','7','81') {$where}";
+                   WHERE jd.eng_id = '{$engId}' 
+                     AND jd.status IN ('0','1','2','3','7','81') 
+                     {$where}";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
         $rows = [];

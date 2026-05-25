@@ -1,13 +1,55 @@
 <?php
-require_once("../includes/config.php");
 
-$pagination='dashboard-pendingcall-data-grid.php';
+require_once("../includes/config.php");
+global $link1,$screenwidth;
+function loaderUser_1($link1,$sapid,$userid){
+    $restunrData=['type'=>'','data'=>''];
+    $sql="select sapid,username,name , designation_id from admin_users where sapid='$sapid' and username='$userid'";
+    $result=mysqli_query($link1,$sql);
+    if(!$result){
+        exit('Error'.__LINE__);
+    }
+    if(mysqli_num_rows($result)===0){
+        exit('Error'.__LINE__);
+    }
+    $row=mysqli_fetch_assoc($result);
+    if($row['designation_id']==='45'){
+        $restunrData['type']='bsi';
+    }else{
+        $restunrData['type']='admin';
+    }
+    $restunrData['data']=$row;
+    return $restunrData;
+}
+
+
+$userid=$_SESSION['userid']??'';
+$sapid=$_SESSION['sapid']??'';
+
+if($userid===''){
+    exit();
+}
+if($userid===''||$sapid===''){
+    exit();
+}
+$user=loaderUser_1($link1,$sapid,$userid);
 
 /*
  *  Workflow :
- *   1.by default when page load the fetch latet data from db and set in input and chart (latest data)
- *   2. when used wanted to change charts and more data then provide the customization from <form>
+ *   1.by default when page load , check which type of user is open the page (BSI and admin user )
+ *   2. if validate which type of user then load filtering data using fetch() function
+ *   3. when used wanted to change charts and more data then provide the customization from <form>
+     Notes : Users filter based on Session_id (some things is problem then check first session_id)
+  Error : Server error :
+                        It's mean Dashboard-pendingcall-data-grid.php me problem
+  Error : Invalid server response :
+                                   Session out ho gya hai , Referesh Page
+  Error : Request timeout. Server taking too long. :
+                                                     Referesh Page and check internet connection is tooo low
+
  */
+
+$pagination='dashboard-pendingcall-data-grid.php';
 ?>
 <!DOCTYPE html>
 <html>
@@ -491,8 +533,8 @@ $pagination='dashboard-pendingcall-data-grid.php';
                             <label class="filter-label">Product</label>
                             <select class="filter-select" id="product_filter">
                                 <option value="">All Products</option>
-                                <option value="2">Battery</option>
                                 <option value="1">Inverter</option>
+                                <option value="2">Battery</option>
                                 <option value="3">Solar Product</option>
                             </select>
                         </div>
@@ -556,7 +598,7 @@ $pagination='dashboard-pendingcall-data-grid.php';
                       <div>
                           <p class="stat-label">&gt; 2 Days Pending</p>
                           <p class="stat-value text-amber mono" id="days_pending">986</p>
-                          <p class="stat-sub">79.0% of total</p>
+                          <p class="stat-sub" id="days_pending_per">79.0% of total</p>
                       </div>
                       <div class="stat-icon bg-amber-50">
                           <svg width="20" height="20" class="icon-amber" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
@@ -584,9 +626,7 @@ $pagination='dashboard-pendingcall-data-grid.php';
                               <h2 class="chart-title">Pending Calls by Aging Bucket (Days)</h2>
                               <span class="chart-info">ℹ</span>
                           </div>
-                          <select class="chart-select">
-                              <option>Bar Chart</option>
-                          </select>
+
                       </div>
                       <div id="agingBucketChart" style="height:240px;"></div>
                   </div>
@@ -853,108 +893,6 @@ include("../includes/connection_close.php");
         tooltip: { borderRadius: 8, shadow: false }
     });
 
-    Highcharts.chart('agingBucketChart', {
-        chart: { type: 'column', backgroundColor: 'transparent', margin: [10, 10, 50, 45] },
-        xAxis: {
-            categories: ['0 - 2 Days', '3 - 5 Days', '5 - 10 Days', '10 - 15 Days', 'Above 15 Days'],
-            labels: { style: { fontSize: '10px', color: '#6b7280' }, rotation: -20 },
-            lineColor: '#e5e7eb', tickColor: '#e5e7eb'
-        },
-        yAxis: {
-            title: { text: 'Number of Calls', style: { fontSize: '10px', color: '#9ca3af' } },
-            labels: { style: { fontSize: '10px', color: '#6b7280' } },
-            gridLineColor: '#f3f4f6'
-        },
-        legend: { enabled: false },
-        plotOptions: {
-            column: {
-                borderRadius: 4,
-                dataLabels: {
-                    enabled: true,
-                    format: '{y}',
-                    style: { fontSize: '10px', fontWeight: '600', textOutline: 'none', color: '#374151' }
-                }
-            }
-        },
-        series: [{
-            name: 'Calls',
-            data: [
-                { y: 112, color: '#22c55e' },
-                { y: 236, color: '#f97316' },
-                { y: 430, color: '#ef4444' },
-                { y: 280, color: '#f97316' },
-                { y: 190, color: '#b91c1c' }
-            ]
-        }],
-        tooltip: {
-            formatter: function() {
-                const pct = ['9.0%','18.9%','34.5%','22.4%','15.2%'];
-                return `<b>${this.x}</b><br>Calls: <b>${this.y}</b> (${pct[this.point.index]})`;
-            }
-        }
-    });
-
-    Highcharts.chart('stateChart', {
-        chart: { type: 'bar', backgroundColor: 'transparent', margin: [5, 60, 20, 100] },
-        xAxis: {
-            categories: ['Delhi','Karnataka','West Bengal','Gujarat','Madhya Pradesh','Bihar','Rajasthan','Maharashtra','Uttar Pradesh'],
-            labels: { style: { fontSize: '10px', color: '#6b7280' } },
-            lineColor: '#e5e7eb', tickColor: '#e5e7eb'
-        },
-        yAxis: {
-            title: { text: 'Number of Calls', style: { fontSize: '10px', color: '#9ca3af' } },
-            labels: { style: { fontSize: '10px', color: '#6b7280' } },
-            gridLineColor: '#f3f4f6', max: 400
-        },
-        legend: { enabled: false },
-        plotOptions: {
-            bar: {
-                borderRadius: 3,
-                color: '#3b82f6',
-                dataLabels: {
-                    enabled: true,
-                    style: { fontSize: '10px', fontWeight: '500', textOutline: 'none', color: '#374151' }
-                }
-            }
-        },
-        series: [{ name: 'Calls', data: [66, 72, 90, 98, 122, 154, 186, 298, 362] }]
-    });
-
-    Highcharts.chart('productChart', {
-        chart: { type: 'pie', backgroundColor: 'transparent', margin: [0, 0, 0, 0] },
-        plotOptions: {
-            pie: {
-                innerSize: '60%',
-                dataLabels: { enabled: false },
-                showInLegend: true,
-                borderWidth: 2,
-                borderColor: '#ffffff'
-            }
-        },
-        legend: {
-            align: 'right',
-            verticalAlign: 'middle',
-            layout: 'vertical',
-            itemStyle: { fontSize: '11px', fontWeight: '500', color: '#374151' },
-            labelFormatter: function() {
-                return `${this.name}<br><span style="color:#6b7280;font-size:10px">${this.y} (${(this.percentage).toFixed(1)}%)</span>`;
-            }
-        },
-        tooltip: { pointFormat: '<b>{point.y}</b> calls ({point.percentage:.1f}%)' },
-        series: [{
-            name: 'Product',
-            data: [
-                { name: 'Battery', y: 652, color: '#3b82f6' },
-                { name: 'Inverter', y: 412, color: '#22c55e' },
-                { name: 'Solar Product', y: 184, color: '#f59e0b' }
-            ]
-        }]
-    });
-
-
-
-
-
     async function getAllDataFetchFromServer() {
         const response = await fetch(
             '../pagination/<?=$pagination?>?form_input_data'
@@ -962,150 +900,219 @@ include("../includes/connection_close.php");
         return await response.json();
     }
 
-
     function DashboardCreations() {
-        this.loader = document.getElementById("dashboardLoader");
-        this.form = document.getElementById("dashboard_form");
-        this.dataRange = document.getElementById("date_range");
-        this.zone = document.getElementById("zone_filter");
-        this.state = document.getElementById("state_filter");
-        this.bsi = document.getElementById("bsi_filter");
-        this.enginertype = document.getElementById("engineer-type");
-        this.product = document.getElementById("product_filter");
-        this.bucket = document.getElementById("bucket_filter");
-        this.status = document.getElementById("status_filter");
+        this.loader        = document.getElementById("dashboardLoader");
+        this.form          = document.getElementById("dashboard_form");
+        this.dataRange     = document.getElementById("date_range");
+        this.zone          = document.getElementById("zone_filter");
+        this.state         = document.getElementById("state_filter");
+        this.bsi           = document.getElementById("bsi_filter");
+        this.enginertype   = document.getElementById("engineer-type");
+        this.product       = document.getElementById("product_filter");
+        this.bucket        = document.getElementById("bucket_filter");
+        this.status        = document.getElementById("status_filter");
         this.submit_button = document.getElementById("submit_button");
-        this.reset_button = document.getElementById("reset_button");
-
-        this.allData = {};
+        this.reset_button  = document.getElementById("reset_button");
+        this.allData       = {};
     }
+
     DashboardCreations.prototype.showLoader = function () {
         this.loader.classList.add("active");
-    }
+    };
+
     DashboardCreations.prototype.hideLoader = function () {
         this.loader.classList.remove("active");
         document.getElementById("dashboard_m").classList.remove("hidden");
-    }
-    DashboardCreations.prototype.init = async function () {
+    };
 
+    /* =========================================================
+     *  INIT
+     * ======================================================= */
+    DashboardCreations.prototype.init = async function () {
         this.allData = await getAllDataFetchFromServer();
         this.fillDateRange();
         this.fillZone();
-        //this.fillbsi(); // <-- ye add karo
         this.fillProducts();
         this.fillEngineerType();
         this.fillStatus();
         this.bindEvent();
-    }
 
-    DashboardCreations.prototype.createOption = function (selectBox, value, text){
-        let option = document.createElement("option");
-        option.value = value??'';
+        <?php if ($user['type'] === 'bsi') { ?>
+        /* --------------------------------------------------
+         *  BSI User: zone auto-select, saari states show,
+         *  BSI apna naam allData se directly select
+         * -------------------------------------------------- */
+        if (this.allData.zone && this.allData.zone.length > 0) {
+
+            // Zone: pehla zone auto-select + lock
+            this.zone.value    = this.allData.zone[0].zone;
+            this.zone.disabled = true;
+
+            // State: allData.zone_wise_state se saari states show karo (filter mat karo)
+            this.state.innerHTML = '<option value="">Select State</option>';
+            if (this.allData.zone_wise_state && this.allData.zone_wise_state.length > 0) {
+                this.allData.zone_wise_state.forEach((item) => {
+                    this.createOption(this.state, item.stateid, item.state);
+                });
+            }
+            this.state.disabled = false; // BSI state change kar sake
+
+            // BSI: allData.bsi se list fill karo, apna sapid auto-select + lock
+            this.bsi.innerHTML = '<option value="">Select BSI</option>';
+            if (this.allData.bsi && this.allData.bsi.length > 0) {
+                this.allData.bsi.forEach((item) => {
+                    this.createOption(this.bsi, item.sapid, item.username);
+                });
+            }
+            this.bsi.value    = "<?= $user['data']['sapid'] ?>";
+            this.bsi.disabled = true;
+        }
+        <?php } ?>
+    };
+
+    /* =========================================================
+     *  OPTION HELPERS
+     * ======================================================= */
+    DashboardCreations.prototype.createOption = function (selectBox, value, text) {
+        let option         = document.createElement("option");
+        option.value       = value ?? '';
         option.textContent = text;
         selectBox.appendChild(option);
-    }
-    DashboardCreations.prototype.createOptionForDateRange = function (selectBox, value, text){
-        let option = document.createElement("option");
-        option.value = value;
+    };
+
+    DashboardCreations.prototype.createOptionForDateRange = function (selectBox, value, text) {
+        let option         = document.createElement("option");
+        option.value       = value;
         option.textContent = `${text} days`;
         selectBox.appendChild(option);
-    }
+    };
 
+    DashboardCreations.prototype.createOptionforEnginner = function (selectBox, value, text) {
+        let option         = document.createElement("option");
+        option.value       = value ?? '';
+        option.textContent = (text === 'ASP') ? 'ASC' : text;
+        selectBox.appendChild(option);
+    };
+
+    /* =========================================================
+     *  FILL DATE RANGE
+     * ======================================================= */
     DashboardCreations.prototype.fillDateRange = function () {
         this.dataRange.innerHTML = '<option value="">Select Date Range</option>';
         this.allData.data_range.forEach((item) => {
             this.createOptionForDateRange(this.dataRange, item, item);
         });
-    }
+    };
+
+    /* =========================================================
+     *  FILL ZONE
+     * ======================================================= */
+    <?php if ($user['type'] === 'bsi') { ?>
+
+    DashboardCreations.prototype.fillZone = function () {
+        this.zone.innerHTML = '';
+        if (this.allData.zone && this.allData.zone.length > 0) {
+            this.allData.zone.forEach((item) => {
+                this.createOption(this.zone, item.zone, item.zone_name);
+            });
+            this.zone.value    = this.allData.zone[0].zone;
+            this.zone.disabled = true;
+        }
+    };
+
+    <?php } else { ?>
 
     DashboardCreations.prototype.fillZone = function () {
         this.zone.innerHTML = '<option value="">Select Zone</option>';
         this.allData.zone.forEach((item) => {
-            this.createOption(
-                this.zone,
-                item.zone,
-                item.zone_name
-            );
+            this.createOption(this.zone, item.zone, item.zone_name);
         });
-    }
+    };
 
+    <?php } ?>
+
+    /* =========================================================
+     *  FILL STATE
+     * ======================================================= */
     DashboardCreations.prototype.fillState = function (zoneid) {
         this.state.innerHTML = '<option value="">Select State</option>';
-
-        let states = this.allData.zone_wise_state.filter((item) => {
-            return item.zoneid == zoneid;
-        });
+        let states = this.allData.zone_wise_state.filter((item) => item.zoneid == zoneid);
         states.forEach((item) => {
-            this.createOption(
-                this.state,
-                item.stateid,
-                item.state
-            );
+            this.createOption(this.state, item.stateid, item.state);
         });
-    }
+    };
 
+    /* =========================================================
+     *  FILL BSI
+     * ======================================================= */
+    <?php if ($user['type'] === 'bsi') { ?>
 
+    // BSI user ke liye fillbsi call nahi hoga (allData se already set hai)
+    // Yeh stub sirf safety ke liye hai
+    DashboardCreations.prototype.fillbsi = async function (state) {};
+
+    <?php } else { ?>
 
     DashboardCreations.prototype.fillbsi = async function (state) {
-        this.showLoader();
+        //this.showLoader();
         try {
-            const response = await fetch(
-                `../pagination/<?=$pagination?>?bsi=${state}`
-            );
-            const data = await response.json();
+            const response = await fetch(`../pagination/<?=$pagination?>?bsi=${state}`);
+            const data     = await response.json();
             this.bsi.innerHTML = '<option value="">Select BSI</option>';
             data.forEach((item) => {
-                this.createOption(
-                    this.bsi,
-                    item.sapid,
-                    item.username
-                );
+                this.createOption(this.bsi, item.sapid, item.username);
             });
         } catch (error) {
             console.error(error);
         } finally {
-            this.hideLoader();
+           // this.hideLoader();
         }
     };
 
+    <?php } ?>
+
+    /* =========================================================
+     *  FILL PRODUCTS / ENGINEER TYPE / STATUS
+     * ======================================================= */
     DashboardCreations.prototype.fillProducts = function () {
         this.product.innerHTML = '<option value="">Select Product</option>';
         this.allData.poduct.forEach((item) => {
-            this.createOption(
-                this.product,
-                item.product_id,
-                item.product_name
-            );
+            this.createOption(this.product, item.product_id, item.product_name);
         });
-    }
+    };
 
     DashboardCreations.prototype.fillEngineerType = function () {
         this.enginertype.innerHTML = '<option value="">Select Engineer Type</option>';
         this.allData.enginnertype.forEach((item) => {
-            this.createOption(
-                this.enginertype,
-                item,
-                item
-            );
+            this.createOptionforEnginner(this.enginertype, item, item);
         });
-    }
+    };
 
     DashboardCreations.prototype.fillStatus = function () {
-        this.status.innerHTML =
-            '<option value="">Select Status</option>';
+        this.status.innerHTML = '<option value="">Select Status</option>';
         this.allData.status.forEach((item) => {
-            this.createOption(
-                this.status,
-                item,
-                item
-            );
+            this.createOption(this.status, item, item);
         });
-    }
+    };
 
+    /* =========================================================
+     *  BIND EVENTS
+     * ======================================================= */
     DashboardCreations.prototype.bindEvent = function () {
         let self = this;
+
+        <?php if ($user['type'] === 'bsi') { ?>
+
+        // BSI ke liye: zone locked hai, state change par kuch nahi (BSI already locked)
+        this.state.addEventListener("change", function (e) {
+            // BSI already locked hai — state change ka koi effect nahi
+        });
+
+        <?php } else { ?>
+
         this.zone.addEventListener("change", function (e) {
             self.fillState(e.target.value);
+            self.bsi.innerHTML = '<option value="">Select BSI</option>';
         });
 
         this.state.addEventListener("change", function (e) {
@@ -1117,612 +1124,351 @@ include("../includes/connection_close.php");
             }
         });
 
+        <?php } ?>
+
         this.submit_button.addEventListener("click", async function (e) {
             e.preventDefault();
             self.formSubmit();
         });
+
         this.reset_button.addEventListener("click", function (e) {
             e.preventDefault();
             self.resetAll();
         });
-    }
+    };
 
+    /* =========================================================
+     *  VALIDATE
+     * ======================================================= */
     DashboardCreations.prototype.validateAll = function () {
-        // if (this.dataRange.value == "") {
-        //     alert("Please Select Date Range");
-        //     return false;
-        // }
-        // if (this.zone.value == "") {
-        //     alert("Please Select Zone");
-        //     return false;
-        // }
-
-        // if (this.state.value == "") {
-        //     alert("Please Select State");
-        //     return false;
-        // }
         return true;
-    }
+    };
 
+    /* =========================================================
+     *  FORM SUBMIT
+     * ======================================================= */
     DashboardCreations.prototype.formSubmit = async function () {
-
-        if (!this.validateAll()) {
-            return false;
-        }
+        if (!this.validateAll()) return false;
 
         if (!navigator.onLine) {
-            this.showMessage(
-                "No internet connection detected",
-                "error"
-            );
+            this.showMessage("No internet connection detected", "error");
             return;
         }
-        try{
+
+        try {
             this.showLoader();
-            // form me data add
+
             const formdata = new FormData();
-            formdata.set('data_range', this.dataRange.value);
-            formdata.set('zone', this.zone.value);
-            formdata.set('state', this.state.value);
-            formdata.set('bsi', this.bsi.value);
+            formdata.set('data_range',    this.dataRange.value);
+            formdata.set('zone',          this.zone.value);
+            formdata.set('state',         this.state.value);
+            formdata.set('bsi',           this.bsi.value);
             formdata.set('enginner_type', this.enginertype.value);
-            formdata.set('product', this.product.value);
-            formdata.set('bucket', this.bucket.value);
-            formdata.set('status', this.status.value);
-            formdata.set('form_submit', this.status.value);
+            formdata.set('product',       this.product.value);
+            formdata.set('bucket',        this.bucket.value);
+            formdata.set('status',        this.status.value);
+            formdata.set('form_submit',   '1');
 
             const controller = new AbortController();
+            const timeout    = setTimeout(() => controller.abort(), 15000);
 
-            const timeout = setTimeout(() => {
-                controller.abort();
-            }, 15000);
-
-            const response = await fetch(
-                '../pagination/<?=$pagination?>',
-                {
-                    method: "POST",
-                    body: formdata,
-                    signal: controller.signal
-                }
-            );
+            const response = await fetch('../pagination/<?=$pagination?>', {
+                method: "POST",
+                body:   formdata,
+                signal: controller.signal
+            });
 
             clearTimeout(timeout);
 
-
-            // SERVER ERROR
-            if (!response.ok) {
-                throw new Error("Server error : " + response.status);
-            }
+            if (!response.ok) throw new Error("Server error : " + response.status);
 
             let data;
             try {
                 data = await response.json();
-            } catch {
+            } catch (err) {
                 throw new Error("Invalid server response");
             }
 
-            // yha data print
-            console.log(data);
+            if (!data) throw new Error("No data received from server");
 
-            // EMPTY DATA
-            if (!data) {
-                throw new Error("No data received from server");
-            }
-            document.getElementById("total_pending_calls").innerText = data.cards_data.total_pending_calls;
-            document.getElementById("avg_aging").innerText = data.cards_data.avg_aging;
-            document.getElementById("days_pending").innerText = data.cards_data.pending_days;
+            // ---- Cards ----
+            document.getElementById("total_pending_calls").innerText    = data.cards_data.total_pending_calls;
+            document.getElementById("avg_aging").innerText              = data.cards_data.avg_aging;
+            document.getElementById("days_pending").innerText           = data.cards_data.pending_days;
+            document.getElementById("days_pending_per").innerText       = data.cards_data.pending_days_percentage;
             document.getElementById("hight_priority_pending").innerText = data.cards_data.high_priority_pending;
+
+            // ---- Bar Chart ----
             Highcharts.chart('agingBucketChart', {
-
-                chart: {
-                    type: 'column',
-                    backgroundColor: 'transparent',
-                    margin: [10, 10, 50, 45]
-                },
-
+                chart: { type: 'column', backgroundColor: 'transparent', margin: [10, 10, 50, 45] },
                 xAxis: {
                     categories: data.chart_details.bar_chart.x_categories,
-                    labels: {
-                        style: {
-                            fontSize: '10px',
-                            color: '#6b7280'
-                        },
-                        rotation: -20
-                    },
-                    lineColor: '#e5e7eb',
-                    tickColor: '#e5e7eb'
+                    labels: { style: { fontSize: '10px', color: '#6b7280' }, rotation: -20 },
+                    lineColor: '#e5e7eb', tickColor: '#e5e7eb'
                 },
-
                 yAxis: {
-                    title: {
-                        text: data.chart_details.bar_chart.y_label,
-                        style: {
-                            fontSize: '10px',
-                            color: '#9ca3af'
-                        }
-                    },
-                    labels: {
-                        style: {
-                            fontSize: '10px',
-                            color: '#6b7280'
-                        }
-                    },
+                    title: { text: data.chart_details.bar_chart.y_label, style: { fontSize: '10px', color: '#9ca3af' } },
+                    labels: { style: { fontSize: '10px', color: '#6b7280' } },
                     gridLineColor: '#f3f4f6'
                 },
-
-                legend: {
-                    enabled: false
-                },
-
+                legend: { enabled: false },
                 plotOptions: {
                     column: {
                         borderRadius: 4,
-                        dataLabels: {
-                            enabled: true,
-                            format: '{y}',
-                            style: {
-                                fontSize: '10px',
-                                fontWeight: '600',
-                                textOutline: 'none',
-                                color: '#374151'
-                            }
-                        }
+                        dataLabels: { enabled: true, format: '{y}', style: { fontSize: '10px', fontWeight: '600', textOutline: 'none', color: '#374151' } }
                     }
                 },
-
-                series: [{
-                    name: 'Calls',
-                    data: data.chart_details.bar_chart.data
-                }]
-
+                series: [{ name: 'Calls', data: data.chart_details.bar_chart.data }]
             });
+
+            // ---- State Chart ----
             Highcharts.chart('stateChart', {
-
-                chart: {
-                    type: 'bar',
-                    backgroundColor: 'transparent',
-                    margin: [5, 60, 20, 100]
-                },
-
+                chart: { type: 'bar', backgroundColor: 'transparent', margin: [5, 60, 20, 100] },
                 xAxis: {
                     categories: data.chart_details.column_chart.x_categories,
-                    labels: {
-                        style: {
-                            fontSize: '10px',
-                            color: '#6b7280'
-                        }
-                    },
-                    lineColor: '#e5e7eb',
-                    tickColor: '#e5e7eb'
+                    labels: { style: { fontSize: '10px', color: '#6b7280' } },
+                    lineColor: '#e5e7eb', tickColor: '#e5e7eb'
                 },
-
                 yAxis: {
-                    title: {
-                        text: data.chart_details.column_chart.y_label,
-                        style: {
-                            fontSize: '10px',
-                            color: '#9ca3af'
-                        }
-                    },
-                    labels: {
-                        style: {
-                            fontSize: '10px',
-                            color: '#6b7280'
-                        }
-                    },
+                    title: { text: data.chart_details.column_chart.y_label, style: { fontSize: '10px', color: '#9ca3af' } },
+                    labels: { style: { fontSize: '10px', color: '#6b7280' } },
                     gridLineColor: '#f3f4f6'
                 },
-
-                legend: {
-                    enabled: false
-                },
-
+                legend: { enabled: false },
                 plotOptions: {
                     bar: {
-                        borderRadius: 3,
-                        color: '#3b82f6',
-
-                        dataLabels: {
-                            enabled: true,
-                            style: {
-                                fontSize: '10px',
-                                fontWeight: '500',
-                                textOutline: 'none',
-                                color: '#374151'
-                            }
-                        }
+                        borderRadius: 3, color: '#3b82f6',
+                        dataLabels: { enabled: true, style: { fontSize: '10px', fontWeight: '500', textOutline: 'none', color: '#374151' } }
                     }
                 },
-
-                series: [{
-                    name: 'Calls',
-                    data: data.chart_details.column_chart.data
-                }]
-
+                series: [{ name: 'Calls', data: data.chart_details.column_chart.data }]
             });
+
+            // ---- Pie Chart ----
             Highcharts.chart('productChart', {
-
-                chart: {
-                    type: 'pie',
-                    backgroundColor: 'transparent',
-                    margin: [0, 0, 0, 0],
-                    // top right legend ke liye spacing
-                    spacingTop: 10,
-                    spacingRight: 120,
-                    spacingBottom: 10,
-                    spacingLeft: 10
-                },
-
+                chart: { type: 'pie', backgroundColor: 'transparent', margin: [0, 0, 0, 0], spacingTop: 10, spacingRight: 120, spacingBottom: 10, spacingLeft: 10 },
                 plotOptions: {
-
                     pie: {
                         innerSize: '60%',
-                        dataLabels: {
-                            enabled: false
-                        },
-                        showInLegend: true,
-                        borderWidth: 2,
-                        borderColor: '#ffffff'
+                        dataLabels: { enabled: false },
+                        showInLegend: true, borderWidth: 2, borderColor: '#ffffff'
                     }
-
                 },
-
                 legend: {
-
-                    align: 'right',
-                    verticalAlign: 'middle',
-                    layout: 'vertical',
-
-                    itemStyle: {
-                        fontSize: '11px',
-                        fontWeight: '500',
-                        color: '#374151'
-                    },
-
+                    align: 'right', verticalAlign: 'middle', layout: 'vertical',
+                    itemStyle: { fontSize: '11px', fontWeight: '500', color: '#374151' },
                     labelFormatter: function () {
-
-                        return `
-                    ${this.name}<br>
-                    <span style="color:#6b7280;font-size:10px">
-                        ${this.y} (${(this.percentage).toFixed(1)}%)
-                    </span>
-                `;
+                        return `${this.name}<br><span style="color:#6b7280;font-size:10px">${this.y} (${(this.percentage).toFixed(1)}%)</span>`;
                     }
                 },
-
-                tooltip: {
-                    pointFormat:
-                        '<b>{point.y}</b> calls ({point.percentage:.1f}%)'
-                },
-
-                series: [{
-                    name: data.chart_details.pie_chart.name,
-                    data: data.chart_details.pie_chart.data
-                }]
-
+                tooltip: { pointFormat: '<b>{point.y}</b> calls ({point.percentage:.1f}%)' },
+                series: [{ name: data.chart_details.pie_chart.name, data: data.chart_details.pie_chart.data }]
             });
-            DashboardCreations.prototype.tableRendering(document.getElementById("snapshot_table"),data.aging_snapshot);
-            DashboardCreations.prototype.pendingcallByStatus( document.querySelector(".status-card"),data.pending_call_by_status);
+
+            DashboardCreations.prototype.tableRendering(document.getElementById("snapshot_table"), data.aging_snapshot);
+            DashboardCreations.prototype.pendingcallByStatus(document.querySelector(".status-card"), data.pending_call_by_status);
             this.stackData(data.stack_data);
             this.ReplacementSettlement(data.pending_replacement_settlement);
-        }
-        catch(error){
+
+        } catch (error) {
             console.error(error);
             this.hideLoader();
-            if(error.name === "AbortError"){
+
+            if (error.name === "AbortError") {
                 this.showMessage("Request timeout. Server taking too long.", "error");
                 return;
             }
-
-            if(error.message.includes("Failed to fetch")){
+            if (error.message.includes("Failed to fetch")) {
                 this.showMessage("Unable to connect to server", "error");
                 return;
             }
-            // other errors
-            this.showMessage(error.message || "Something went wrong",
-                "error"
-            );
-        }finally {
+            this.showMessage(error.message || "Something went wrong", "error");
+
+        } finally {
             this.submit_button.disabled = false;
             this.hideLoader();
         }
-    }
-
-    DashboardCreations.prototype.ReplacementSettlement = function (pending_replacement_settlement) {
-
-        // RPH Pending
-        document.querySelector("#rph_pending .status-count").innerHTML = `
-        ${pending_replacement_settlement.rph_pending[0]}
-        <span class="status-pct">
-            (${pending_replacement_settlement.rph_pending[1]})
-        </span>
-    `;
-
-        document.querySelector("#rph_pending")
-            .closest(".status-detail")
-            .querySelector(".progress-fill")
-            .style.width = pending_replacement_settlement.rph_pending[1];
-
-
-
-        // RPRD Pending
-        document.querySelector("#rpd_pending .status-count").innerHTML = `
-        ${pending_replacement_settlement.rprd_pending[0]}
-        <span class="status-pct">
-            (${pending_replacement_settlement.rprd_pending[1]})
-        </span>
-    `;
-
-        document.querySelector("#rpd_pending")
-            .closest(".status-detail")
-            .querySelector(".progress-fill")
-            .style.width = pending_replacement_settlement.rprd_pending[1];
-
-
-
-        // PORD Pending
-        document.querySelector("#pod_pending .status-count").innerHTML = `
-        ${pending_replacement_settlement.pord_pending[0]}
-        <span class="status-pct">
-            (${pending_replacement_settlement.pord_pending[1]})
-        </span>
-    `;
-
-        document.querySelector("#pod_pending")
-            .closest(".status-detail")
-            .querySelector(".progress-fill")
-            .style.width = pending_replacement_settlement.pord_pending[1];
-
-        // PORD rph Pending
-        document.querySelector("#pod_pending_rph .status-count").innerHTML = `
-        ${pending_replacement_settlement.pord_pending_rph[0]}
-        <span class="status-pct">
-            (${pending_replacement_settlement.pord_pending_rph[1]})
-        </span>
-    `;
-
-        document.querySelector("#pod_pending_rph")
-            .closest(".status-detail")
-            .querySelector(".progress-fill")
-            .style.width = pending_replacement_settlement.pord_pending_rph[1];
-    }
-    DashboardCreations.prototype.stackData = function(stackdata){
-
-        const oldest_pending_call_days =
-            document.getElementById("oldest_pending_call_days");
-
-        const oldest_pending_call_product =
-            document.getElementById("oldest_pending_call_product");
-
-        const oldest_pending_call_address =
-            document.getElementById("oldest_pending_call_address");
-        const sla_breached=document.getElementById("sla_breached");
-
-        const top_state_state =
-            document.getElementById("top_state_state");
-
-        const top_state_days =
-            document.getElementById("top_state_days");
-
-
-        const top_product =
-            document.getElementById("top_product");
-
-        const top_product_days =
-            document.getElementById("top_product_days");
-
-
-        // Oldest Pending Call
-
-        oldest_pending_call_days.innerText =
-            stackdata.oldest_pending_call.days || "0days";
-
-        oldest_pending_call_product.innerText =
-            stackdata.oldest_pending_call.product || "-";
-
-        oldest_pending_call_address.innerText =
-            stackdata.oldest_pending_call.address || "-";
-        sla_breached.innerHTML=stackdata.sla || "-";
-
-        // Top State
-        top_state_state.innerText =
-            stackdata.top_state.state_name || "-";
-
-        top_state_days.innerText =
-            stackdata.top_state.aging_days || "0days";
-
-
-        // Top Product
-
-        top_product.innerText =
-            stackdata.top_product.product || "-";
-
-        top_product_days.innerText =
-            stackdata.top_product.days || "0days";
     };
 
+    /* =========================================================
+     *  REPLACEMENT SETTLEMENT
+     * ======================================================= */
+    DashboardCreations.prototype.ReplacementSettlement = function (pending_replacement_settlement) {
+        const items = [
+            { id: '#rph_pending',     key: 'rph_pending'     },
+            { id: '#rpd_pending',     key: 'rprd_pending'    },
+            { id: '#pod_pending',     key: 'pord_pending'    },
+            { id: '#pod_pending_rph', key: 'pord_pending_rph'}
+        ];
+        items.forEach(({ id, key }) => {
+            const el = document.querySelector(id);
+            if (!el || !pending_replacement_settlement[key]) return;
+            el.querySelector(".status-count").innerHTML =
+                `${pending_replacement_settlement[key][0]} <span class="status-pct">(${pending_replacement_settlement[key][1]})</span>`;
+            el.closest(".status-detail").querySelector(".progress-fill").style.width =
+                pending_replacement_settlement[key][1];
+        });
+    };
+
+    /* =========================================================
+     *  STACK DATA
+     * ======================================================= */
+    DashboardCreations.prototype.stackData = function (stackdata) {
+        document.getElementById("oldest_pending_call_days").innerText    = stackdata.oldest_pending_call.days    || "0 days";
+        document.getElementById("oldest_pending_call_product").innerText = stackdata.oldest_pending_call.product || "-";
+        document.getElementById("oldest_pending_call_address").innerText = stackdata.oldest_pending_call.address || "-";
+        document.getElementById("sla_breached").innerHTML                = stackdata.sla                         || "-";
+        document.getElementById("top_state_state").innerText             = stackdata.top_state.state_name        || "-";
+        document.getElementById("top_state_days").innerText              = stackdata.top_state.aging_days        || "0 days";
+        document.getElementById("top_product").innerText                 = stackdata.top_product.product         || "-";
+        document.getElementById("top_product_days").innerText            = stackdata.top_product.days            || "0 days";
+    };
+
+    /* =========================================================
+     *  RESET
+     * ======================================================= */
     DashboardCreations.prototype.resetAll = function () {
+        <?php if ($user['type'] === 'bsi') { ?>
+        // BSI ke liye: zone/bsi locked hain, sirf baki fields reset
+        this.dataRange.value   = '';
+        this.state.value       = '';
+        this.enginertype.value = '';
+        this.product.value     = '';
+        this.status.value      = '';
+        <?php } else { ?>
         this.form.reset();
         this.state.innerHTML = '<option value="">Select State</option>';
+        this.bsi.innerHTML   = '<option value="">Select BSI</option>';
+        <?php } ?>
         document.getElementById("dashboard_m").classList.add("hidden");
-    }
-    DashboardCreations.prototype.cardSetValue=function(){}
-    DashboardCreations.prototype.columncartSetup=function(){}
-    DashboardCreations.prototype.piechartSetup=function(){}
+    };
 
-    document.addEventListener("DOMContentLoaded", async function () {
-        let dashboard = new DashboardCreations();
-        await dashboard.init();
-    });
-    DashboardCreations.prototype.tableRendering = function(table, data = []) {
-
+    /* =========================================================
+     *  TABLE RENDERING
+     * ======================================================= */
+    DashboardCreations.prototype.tableRendering = function (table, data = []) {
         let tbody = table.querySelector("tbody");
-
-        if (!tbody) {
-
-            tbody = document.createElement("tbody");
-
-            table.appendChild(tbody);
-        }
-
+        if (!tbody) { tbody = document.createElement("tbody"); table.appendChild(tbody); }
         tbody.innerHTML = "";
 
-        /*
-        |--------------------------------------------------------------------------
-        | Loop Main Data
-        |--------------------------------------------------------------------------
-        */
-
         data.forEach(item => {
-
-            /*
-            |--------------------------------------------------------------------------
-            | ROWS
-            |--------------------------------------------------------------------------
-            */
-
             if (item.rows && Array.isArray(item.rows)) {
-
                 item.rows.forEach(row => {
-
                     let tr = document.createElement("tr");
-
                     row.forEach((cell, index) => {
-
-                        let td = document.createElement("td");
-
-                        td.textContent = cell;
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | Last Column = %
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (index === row.length - 1) {
-
-                            td.style.fontWeight = "600";
-                        }
-
+                        let td          = document.createElement("td");
+                        td.textContent  = cell;
+                        if (index === row.length - 1) td.style.fontWeight = "600";
                         tr.appendChild(td);
                     });
-
                     tbody.appendChild(tr);
                 });
             }
-
-            /*
-            |--------------------------------------------------------------------------
-            | TOTAL ROW
-            |--------------------------------------------------------------------------
-            */
-
             if (item.total && Array.isArray(item.total)) {
-
                 let tr = document.createElement("tr");
-
                 tr.classList.add("total-row");
-
                 item.total.forEach(cell => {
-
-                    let td = document.createElement("td");
-
-                    td.textContent = cell;
-
+                    let td              = document.createElement("td");
+                    td.textContent      = cell;
                     td.style.fontWeight = "700";
-
                     tr.appendChild(td);
                 });
-
                 tbody.appendChild(tr);
             }
         });
     };
 
-    DashboardCreations.prototype.pendingcallByStatus = function(element, data) {
-
+    /* =========================================================
+     *  PENDING CALL BY STATUS
+     * ======================================================= */
+    DashboardCreations.prototype.pendingcallByStatus = function (element, data) {
         if (!data || !data.length) return;
 
         let statusData = data[0];
-
-        let statusMap = {
-            assigned: "assigned_row",
-            part_not_assigned: "part_not_available_row",
-            work_in_progress: "work_in_progress_row",
-            unassigned: "unassigned_row",
+        let statusMap  = {
+            assigned:            "assigned_row",
+            part_not_assigned:   "part_not_available_row",
+            work_in_progress:    "work_in_progress_row",
+            unassigned:          "unassigned_row",
             replacement_request: "replacement_request"
         };
 
         Object.keys(statusMap).forEach(key => {
-
-            let rowId = statusMap[key];
-
-            let row = element.querySelector("#" + rowId);
-
+            let row = element.querySelector("#" + statusMap[key]);
             if (!row || !statusData[key]) return;
-
-            let count = statusData[key][0];
-            let percent = statusData[key][1];
-
-            let countElement = row.querySelector(".status-count");
-
-            countElement.innerHTML = `
-            ${count}
-            <span class="status-pct">(${percent})</span>
-        `;
-
-            let progressFill = row
-                .closest(".status-detail")
-                .querySelector(".progress-fill");
-            progressFill.style.width = percent;
-
+            row.querySelector(".status-count").innerHTML =
+                `${statusData[key][0]} <span class="status-pct">(${statusData[key][1]})</span>`;
+            row.closest(".status-detail").querySelector(".progress-fill").style.width = statusData[key][1];
         });
 
         let totalData = data.find(item => item.total);
-
         if (totalData) {
             let totalRow = element.querySelector(".status-total-row");
             if (totalRow) {
-                totalRow.querySelector(".status-total-val").innerHTML = `
-                ${totalData.total[0]}
-                <span class="status-pct">(${totalData.total[1]})</span>`;
+                totalRow.querySelector(".status-total-val").innerHTML =
+                    `${totalData.total[0]} <span class="status-pct">(${totalData.total[1]})</span>`;
             }
         }
     };
-    DashboardCreations.prototype.showMessage = function (message, type = "error"){
 
-        let bgColor = "#ef4444";
-        if(type === "success"){
-            bgColor = "#22c55e";
-        }
-        if(type === "warning"){
-            bgColor = "#f59e0b";
-        }
-        const div = document.createElement("div");
+    /* =========================================================
+     *  SHOW MESSAGE
+     * ======================================================= */
+    DashboardCreations.prototype.showMessage = function (message, type = "error") {
+        let bgColor = type === "success" ? "#22c55e" : type === "warning" ? "#f59e0b" : "#ef4444";
 
-        div.className = "custom-alert";
-
+        const div            = document.createElement("div");
+        div.className        = "custom-alert";
         div.style.background = bgColor;
-
-        div.innerText = message;
-
+        div.innerText        = message;
         document.body.appendChild(div);
 
+        setTimeout(() => div.classList.add("show"), 100);
         setTimeout(() => {
-            div.classList.add("show");
-        }, 100);
-
-        setTimeout(() => {
-
             div.classList.remove("show");
-
-            setTimeout(() => {
-                div.remove();
-            }, 300);
-
+            setTimeout(() => div.remove(), 300);
         }, 3500);
-    }
+    };
+
+    /* =========================================================
+     *  STUBS
+     * ======================================================= */
+    DashboardCreations.prototype.cardSetValue    = function () {};
+    DashboardCreations.prototype.columncartSetup = function () {};
+    DashboardCreations.prototype.piechartSetup   = function () {};
+
+    /* =========================================================
+     *  DOM READY
+     * ======================================================= */
+    document.addEventListener("DOMContentLoaded", async function () {
+        let dashboard = new DashboardCreations();
+        await dashboard.init();
+    });
 </script>
 
+<script>
+    /*
+    ishe function me jab bhi koe data traveling karega to use data ko encrpty kar sakte hai
+    key basic par
+    Note : Key Store hoge : Server par
+    Every Request par key generated hoge , browser ke pass and then data pass karenge
+     */
+    function EncrypterDataOnNetworkCall(){}
+    /*
+    Stored key ko fetch karke data ko decrypt karnege for showing the data
+     */
+    function DecryprtorDataOnNetworkCall(){}
+
+    // Problem = Time taken  hoga ...
+    // Solution
+    // 1. In Browser, encryption/Decyption
+    // 2. WASM ke though encryption/decryption. (benifit= in browser + Native Support(C,C++,Java,WIndow/Linux))
+
+    /*
+           /key    <--------------->  (Store key)
+          |-------------------  using WASM (Encrp/Decrypt)
+    Server <--------------> Request <------------> Browser <-----------> View
+     */
+</script>
 </body>
 </html>
