@@ -1,10 +1,9 @@
 <?php
 require_once("../includes/config.php");
 global $link1;
-header("Content-type: application/json");
+//header("Content-type: application/json");
 
-class DashoardLaoder_1
-{
+class DashoardLaoder_1{
     private $connection;
 
     public function __construct($connection)
@@ -17,7 +16,7 @@ class DashoardLaoder_1
         $data = [];
 
         $bsiCondition = "";
-
+        $totalJobsDebug = 0;
         if (!empty($condition['bsi'])) {
             $bsi = mysqli_real_escape_string($this->connection, $condition['bsi']);
             $bsiCondition .= " AND au.sapid = '{$bsi}' ";
@@ -32,6 +31,7 @@ class DashoardLaoder_1
             $bsiCondition .= " AND sm.stateid= '{$state}' ";
         }
 
+
         $allBSI = $this->getAllBSIFromtheEnginner($bsiCondition);
 
         if (empty($allBSI)) {
@@ -45,27 +45,32 @@ class DashoardLaoder_1
             $bsiusername_1 = $bsi['username'];
             $zone          = $this->getzone($bsiusername_1, $condition);
 
-            // FIX: Pass only engineer filter, NOT zone/state to fetchBSIEnginners
             $enginners = $this->fetchBSIEnginners($bsiId, $condition);
+
+
+            if(count($enginners)===0){
+                continue;
+            }
 
             $engineerRows = [];
             $bsiTotals    = $this->defaultStatusBucket();
+
 
             foreach ($enginners as $eng) {
                 $engId   = $eng['userloginid'];
                 $engName = $eng['locusername'];
 
-                // FIX: Pass only segment/sub_segment/date_range/engineer to job fetcher
-                // Zone & State should NOT filter jobs — they already filtered which BSI/engineers to show
                 $jobCondition = [
                     'date_range'  => $condition['date_range']  ?? '',
                     'segment'     => $condition['segment']     ?? '',
                     'sub_segment' => $condition['sub_segment'] ?? '',
-                    // enginner filter for job level (if specific engineer chosen)
                     'enginner'    => $condition['enginner']    ?? '',
+                    'zone'         => $condition['zone']        ??'',
+                    'state'       => $condition['state'] ?? ''
                 ];
 
                 $jobs = $this->fetchEngineerJobs($engId, $jobCondition);
+
                 if (empty($jobs)) {
                     continue;
                 }
@@ -73,11 +78,14 @@ class DashoardLaoder_1
                 $engineerData = $this->defaultStatusBucket();
 
                 foreach ($jobs as $job) {
+                    $totalJobsDebug++;
                     $status = $job['status'];
-                    $aging  = (int)$job['aging_days'];
-                    $bucket = $this->calculateBucket($aging);
+                    $aging_hours = (int)$job['aging_hours'];
+                    $aging_days  = (int)$job['aging_days'];
+                    $bucket      = $this->calculateBucket($aging_hours, $aging_days);
 
                     if ($bucket === false) {
+                        echo "BUCKET FAILED : ".$job['job_id']."<br>";
                         continue;
                     }
 
@@ -149,18 +157,20 @@ class DashoardLaoder_1
     }
 
 
-    public function fetchBSIEnginners($bsiId, $condition = [])
-    {
-        // FIX: Escape bsiId properly
+    public function fetchBSIEnginners($bsiId, $condition = []){
+
+        if(empty($bsiId)){
+            return [];
+        }
         $bsiId = mysqli_real_escape_string($this->connection, $bsiId);
-        $where = " WHERE lum.mapped_bsi = '{$bsiId}' ";
+        $where = " WHERE  lum.mapped_bsi = '{$bsiId}' and lum.mapped_bsi is not null and lum.mapped_bsi <>'' and lum.statusid='1' ";
 
         if (!empty($condition['enginner'])) {
             $engid = mysqli_real_escape_string($this->connection, $condition['enginner']);
             $where .= " AND lum.userloginid = '{$engid}' ";
         }
 
-        $sql    = "SELECT lum.locusername, lum.userloginid FROM locationuser_master lum {$where}";
+        $sql    = "SELECT DISTINCT lum.locusername, lum.userloginid FROM locationuser_master lum {$where}";
         $result = mysqli_query($this->connection, $sql);
 
         if (!$result) return [];
@@ -173,23 +183,27 @@ class DashoardLaoder_1
     }
 
 
-    public function fetchEngineerJobs($engId, $condition = [])
-    {
+    public function fetchEngineerJobs($engId, $condition = []){
         $engId = mysqli_real_escape_string($this->connection, $engId);
-        $where = "";
+        $where = "and jd.eng_id is NOT null and jd.eng_id <> '' AND jd.eng_id in ( SELECT lum.userloginid FROM locationuser_master lum WHERE lum.mapped_bsi is not null and lum.mapped_bsi <>'' and lum.statusid='1')";
+
 
         if (!empty($condition['date_range'])) {
-            $date  = (int)$condition['date_range'];
-            $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
+            $date  = $condition['date_range'];
+            $where .= " AND DATE(jd.open_date) <= '$date'";
         }
-
-        // FIX PROBLEM 2: Zone aur State conditions yahan SE HATA DIYE
-        // Kyunki BSI/engineer already zone+state ke basis par filter ho chuke hain
-        // Agar yahan bhi filter lagao to ek hi engineer ke jobs galat count honge
 
         if (!empty($condition['enginner'])) {
             $engid  = mysqli_real_escape_string($this->connection, $condition['enginner']);
             $where .= " AND jd.eng_id = '{$engid}' ";
+        }
+        if(isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid  = mysqli_real_escape_string($this->connection, $condition['zone']);
+            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        }
+        if (isset($condition['state']) && !empty($condition['state'])) {
+            $stateid = mysqli_real_escape_string($this->connection, $condition['state']);
+            $where .= " AND jd.state_id = '{$stateid}' ";
         }
 
         if (!empty($condition['segment'])) {
@@ -208,15 +222,17 @@ class DashoardLaoder_1
             $where     .= " AND jd.product_id = '{$subSegment}' ";
         }
 
+
         $sql = "
-            SELECT
-                jd.*,
-                DATEDIFF(NOW(), jd.open_date) as aging_days
-            FROM jobsheet_data jd
-            WHERE jd.eng_id = '{$engId}'
-              AND jd.status IN ('0','1','2','3','7','81')
-              {$where}
-        ";
+        SELECT
+            jd.*,
+            DATEDIFF(NOW(), jd.open_date) AS aging_days,
+            TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) AS aging_hours
+        FROM jobsheet_data jd
+        WHERE jd.eng_id = '{$engId}'
+          AND jd.status IN ('1','2','3','7','81')
+          {$where}
+    ";
 
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
@@ -253,15 +269,15 @@ class DashoardLaoder_1
         ];
     }
 
-    public function calculateBucket($aging)
-    {
-        if ($aging < 0)                   return false;
-        if ($aging <= 1)                  return 'b1';
-        if ($aging == 2)                  return 'b2';
-        if ($aging >= 3  && $aging <= 5)  return 'b3';
-        if ($aging >= 6  && $aging <= 10) return 'b4';
-        if ($aging >= 11 && $aging <= 15) return 'b5';
-        if ($aging >= 16)                 return 'b6';
+    public function calculateBucket($aging_hours, $aging_days){
+        if ($aging_hours < 0)                        return false;
+        if ($aging_hours <= 24)                      return 'b1'; // ≤ 24 hrs = 0-1
+        if ($aging_hours > 24 && $aging_hours <= 48) return 'b2'; // > 24 hrs & ≤ 48 hrs = 2dasy ke liye
+
+        if ($aging_days >= 3  && $aging_days <= 5)   return 'b3';
+        if ($aging_days >= 6  && $aging_days <= 10)  return 'b4';
+        if ($aging_days >= 11 && $aging_days <= 15)  return 'b5';
+        if ($aging_days >= 16)                       return 'b6';
 
         return false;
     }
@@ -292,7 +308,7 @@ class DashoardLaoder_1
               AND au.status='1' 
               AND ar.status='Y' 
               {$condition}
-            GROUP BY au.sapid
+            GROUP BY au.username
         ";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
@@ -316,7 +332,6 @@ if (isset($_REQUEST['submit_data'])) {
     $condition['enginner']    = $_REQUEST['enginner']    ?? '';
     $condition['segment']     = $_REQUEST['segment']     ?? '';
     $condition['sub_segment'] = $_REQUEST['sub_segment'] ?? '';
-
     $data = $dashoboard->bsiLoader($condition);
     $show['status'] = true;
     $show['data']   = $data;

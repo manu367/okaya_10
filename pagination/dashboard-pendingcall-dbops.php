@@ -248,7 +248,8 @@ class DataFetchingFromDB{
     {
         // STATUS FILTER AB HAMESHA LAGEGA — condition ka wait nahi
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
+
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -293,6 +294,7 @@ class DataFetchingFromDB{
         }
 
 
+
         // Aging bucket filter (jo pehle commented tha — ab active)
         if (isset($condition['aging_bucket']) && !empty($condition['aging_bucket'])) {
             $aging = (int)$condition['aging_bucket'];
@@ -313,6 +315,7 @@ class DataFetchingFromDB{
         if (!$result) return 0;
 
         $row = mysqli_fetch_assoc($result);
+
         return $row['total'] ?? 0;
     }
 
@@ -322,7 +325,7 @@ class DataFetchingFromDB{
     {
         // STATUS FILTER HAMESHA ACTIVE
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -383,6 +386,7 @@ class DataFetchingFromDB{
             LEFT JOIN `locationuser_master` lm 
                 ON lm.userloginid = jd.eng_id
             {$where}";
+
         $result = mysqli_query($link1, $sql);
         if (!$result) return 0;
 
@@ -396,7 +400,7 @@ class DataFetchingFromDB{
     {
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
         $where .= " AND DATEDIFF(NOW(), jd.open_date) > 2 ";
-        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' ";
+        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' and lm.statusid='1' ";
 
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date  = (int)$condition['date_range'];
@@ -498,34 +502,39 @@ class DataFetchingFromDB{
     {
         // STATUS FILTER HAMESHA ACTIVE — conditional nahi
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' AND lm.statusid = '1' ";
+
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
         }
 
-        if(isset($condition['zone']) && !empty($condition['zone'])) {
-            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
-            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        if (isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN (
+                        SELECT zm.stateid FROM state_master zm
+                        WHERE zm.zoneid IN ('{$zoneid}')
+                    ) ";
         }
-        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
-            $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
-            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+
+        if (isset($condition['bsi']) && !empty($condition['bsi'])) {
+            $bsiId = mysqli_real_escape_string($link1, $condition['bsi']);
+            $where .= " AND jd.eng_id IN (
+                        SELECT userloginid FROM locationuser_master
+                        WHERE mapped_bsi IN ('{$bsiId}')
+                    ) ";
         }
 
         if (isset($condition['product']) && !empty($condition['product'])) {
             $productid = mysqli_real_escape_string($link1, $condition['product']);
-            if($productid==='1'){
-                // inverter
-                $where .= " AND jd.product_id in ('1') ";
+            if ($productid === '1') {
+                $where .= " AND jd.product_id IN ('1') ";
             }
-            if($productid==='2'){
-                // battery
+            if ($productid === '2') {
                 $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
             }
-            if ($productid==='3') {
-                // solor
-                $where .= " AND jd.product_id in ('6','10','11','12')";
+            if ($productid === '3') {
+                $where .= " AND jd.product_id IN ('6','10','11','12') ";
             }
         }
 
@@ -544,29 +553,16 @@ class DataFetchingFromDB{
             $where .= " AND lm.eng_type = '{$engType}' ";
         }
 
-
-        if (isset($condition['aging_bucket']) && !empty($condition['aging_bucket'])) {
-            $aging = (int)$condition['aging_bucket'];
-        }
-
-        $where .= "
-AND TIMESTAMPDIFF(
-    HOUR,
-    STR_TO_DATE(
-        CONCAT(jd.open_date, ' ', jd.open_time),
-        '%Y-%m-%d %H:%i:%s'
-    ),
-    NOW()
-) > 48
-";
-
-        $sql = "SELECT COUNT(jd.job_id) as total
+        $where .=" and DATEDIFF(NOW(), jd.open_date) > 5";
+        $sql = "SELECT COUNT(jd.job_id) AS total
             FROM `jobsheet_data` jd
-            LEFT JOIN `locationuser_master` lm 
+            LEFT JOIN `locationuser_master` lm
                 ON lm.userloginid = jd.eng_id
             {$where}";
 
+
         $result = mysqli_query($link1, $sql);
+
         if (!$result) return 0;
 
         $row = mysqli_fetch_assoc($result);
@@ -578,61 +574,60 @@ AND TIMESTAMPDIFF(
     public static function generateBarChartDataFromDB($link1, $condition = [])
     {
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' AND lm.statusid='1' ";
+
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
-            $date = (int)$condition['date_range'];
+            $date   = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
         }
-
-        if(isset($condition['zone']) && !empty($condition['zone'])) {
-            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
-            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        if (isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN (SELECT zm.stateid FROM state_master zm WHERE zm.zoneid IN ('{$zoneid}'))";
         }
-        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
+        if (isset($condition['bsi']) && !empty($condition['bsi'])) {
             $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
-            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+            $where .= " AND jd.eng_id IN (SELECT userloginid FROM locationuser_master WHERE mapped_bsi IN ('{$bsiId}'))";
         }
-
         if (isset($condition['product']) && !empty($condition['product'])) {
             $productid = mysqli_real_escape_string($link1, $condition['product']);
-            if($productid==='1'){
-                // inverter
-                $where .= " AND jd.product_id in ('1') ";
-            }
-            if($productid==='2'){
-                // battery
-                $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
-            }
-            if ($productid==='3') {
-                // solor
-                $where .= " AND jd.product_id in ('6','10','11','12')";
-            }
+            if ($productid === '1') $where .= " AND jd.product_id IN ('1') ";
+            if ($productid === '2') $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
+            if ($productid === '3') $where .= " AND jd.product_id IN ('6','10','11','12') ";
         }
-
         if (isset($condition['state']) && !empty($condition['state'])) {
             $stateid = mysqli_real_escape_string($link1, $condition['state']);
-            $where .= " AND jd.state_id = '{$stateid}' ";
+            $where  .= " AND jd.state_id = '{$stateid}' ";
         }
-
         if (isset($condition['enginner']) && !empty($condition['enginner'])) {
-            $engid = mysqli_real_escape_string($link1, $condition['enginner']);
+            $engid  = mysqli_real_escape_string($link1, $condition['enginner']);
             $where .= " AND jd.eng_id = '{$engid}' ";
         }
-
         if (isset($condition['enginner_type']) && !empty($condition['enginner_type'])) {
             $engType = mysqli_real_escape_string($link1, $condition['enginner_type']);
-            $where .= " AND lm.eng_type = '{$engType}' ";
+            $where  .= " AND lm.eng_type = '{$engType}' ";
         }
-
-
 
         $sql = "
         SELECT
-            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 0 AND 3  THEN 1 ELSE 0 END) as bucket_0_3,
-            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 4 AND 5  THEN 1 ELSE 0 END) as bucket_4_5,
-            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 6 AND 10 THEN 1 ELSE 0 END) as bucket_6_10,
-            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 11 AND 15 THEN 1 ELSE 0 END) as bucket_11_15,
-            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) > 15 THEN 1 ELSE 0 END) as bucket_above_15
+            --  B1: <= 24 HRS (hours based — open_date + open_time)
+            SUM(CASE
+                WHEN TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) <= 24
+                THEN 1 ELSE 0
+            END) AS bucket_24hrs,
+
+            --  B2: > 24 HRS AND <= 48 HRS (hours based — open_date + open_time)
+            SUM(CASE
+                WHEN TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) > 24
+                AND  TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) <= 48
+                THEN 1 ELSE 0
+            END) AS bucket_48hrs,
+
+            --  B3-B6: Days based (pehle jaisa DATEDIFF)
+            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 3  AND 5  THEN 1 ELSE 0 END) AS bucket_3_5,
+            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 6  AND 10 THEN 1 ELSE 0 END) AS bucket_6_10,
+            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 11 AND 15 THEN 1 ELSE 0 END) AS bucket_11_15,
+            SUM(CASE WHEN DATEDIFF(NOW(), jd.open_date) > 15              THEN 1 ELSE 0 END) AS bucket_above_15
+
         FROM jobsheet_data jd
         LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id
         {$where}
@@ -644,12 +639,13 @@ AND TIMESTAMPDIFF(
         $row = mysqli_fetch_assoc($result);
 
         return [
-            "x_categories" => ['0-3 Days', '4-5 Days', '6-10 Days', '11-15 Days', 'Above 15 Days'],
+            "x_categories" => ['<=24 HRS', '<=48 HRS', '3-5 ', '6-10 ', '11-15 ', 'Above 15'],
             "y_label"      => "Number of calls",
             "data"         => [
-                ["y" => (int)$row['bucket_0_3'],      "color" => '#22c55e'],
-                ["y" => (int)$row['bucket_4_5'],      "color" => '#f97316'],
-                ["y" => (int)$row['bucket_6_10'],     "color" => '#ef4444'],  // variable name fix: bucket_5_10 → bucket_6_10
+                ["y" => (int)$row['bucket_24hrs'],    "color" => '#22c55e'],
+                ["y" => (int)$row['bucket_48hrs'],    "color" => '#84cc16'],
+                ["y" => (int)$row['bucket_3_5'],      "color" => '#f97316'],
+                ["y" => (int)$row['bucket_6_10'],     "color" => '#ef4444'],
                 ["y" => (int)$row['bucket_11_15'],    "color" => '#f97316'],
                 ["y" => (int)$row['bucket_above_15'], "color" => '#b91c1c'],
             ]
@@ -661,7 +657,7 @@ AND TIMESTAMPDIFF(
     public static function generateColumnChartDataFromDb($link1, $condition = [])
     {
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -742,7 +738,7 @@ AND TIMESTAMPDIFF(
     {
 
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
 
         // Date Range
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
@@ -837,7 +833,7 @@ AND TIMESTAMPDIFF(
         $solarIds    = [6, 10, 11, 12];
 
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -965,26 +961,22 @@ AND TIMESTAMPDIFF(
 
     public static function generateagineSnapeShot($link1, $condition = [])
     {
-        // ✅ FIX 1: Correct product ID grouping
-        // Battery   = NOT IN (1, 6, 10, 11, 12, 14)
-        // Inverter  = IN (1)
-        // Solar     = IN (6, 10, 11, 12)
-
-        $batteryExcludeIds = "1,6,10,11,12,14";  // battery = inhe EXCLUDE karo
+        $batteryExcludeIds = "1,6,10,11,12,14";
         $inverterIds       = "1";
         $solarIds          = "6,10,11,12";
 
-        // ✅ FIX 2: Buckets updated as per requirement
+        // ✅ UPDATED: B1 & B2 hours-based, B3-B6 days-based
         $buckets = [
-            ['label' => '0-2 Days',      'min' => 0,  'max' => 2,  'open' => false],
-            ['label' => '3-5 Days',      'min' => 3,  'max' => 5,  'open' => false],
-            ['label' => '6-10 Days',     'min' => 6,  'max' => 10, 'open' => false],
-            ['label' => '11-15 Days',    'min' => 11, 'max' => 15, 'open' => false],
-            ['label' => 'Above 15 Days', 'min' => 16, 'max' => null, 'open' => true],
+            ['label' => '<=24 HRS',      'type' => 'hours', 'min' => 0,  'max' => 24,  'open' => false],
+            ['label' => '<=48 HRS',      'type' => 'hours', 'min' => 25, 'max' => 48,  'open' => false],
+            ['label' => '3-5 ',      'type' => 'days',  'min' => 3,  'max' => 5,   'open' => false],
+            ['label' => '6-10 ',     'type' => 'days',  'min' => 6,  'max' => 10,  'open' => false],
+            ['label' => '11-15',    'type' => 'days',  'min' => 11, 'max' => 15,  'open' => false],
+            ['label' => 'Above 15 ', 'type' => 'days',  'min' => 16, 'max' => null,'open' => true],
         ];
 
         $where  = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' ";
+        $where .= " AND jd.eng_id IS NOT NULL AND jd.eng_id <> '' and lm.statusid='1' ";
 
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date   = (int)$condition['date_range'];
@@ -994,17 +986,17 @@ AND TIMESTAMPDIFF(
         if (isset($condition['zone']) && !empty($condition['zone'])) {
             $zoneid = mysqli_real_escape_string($link1, $condition['zone']);
             $where .= " AND jd.state_id IN (
-                        SELECT zm.stateid FROM state_master zm
-                        WHERE zm.zoneid IN ('{$zoneid}')
-                    ) ";
+                    SELECT zm.stateid FROM state_master zm
+                    WHERE zm.zoneid IN ('{$zoneid}')
+                ) ";
         }
 
         if (isset($condition['bsi']) && !empty($condition['bsi'])) {
             $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
             $where .= " AND jd.eng_id IN (
-                        SELECT userloginid FROM locationuser_master
-                        WHERE mapped_bsi IN ('{$bsiId}')
-                    ) ";
+                    SELECT userloginid FROM locationuser_master
+                    WHERE mapped_bsi IN ('{$bsiId}')
+                ) ";
         }
 
         if (isset($condition['product']) && !empty($condition['product'])) {
@@ -1055,11 +1047,23 @@ AND TIMESTAMPDIFF(
 
         foreach ($buckets as $i => $bucket) {
 
-            $agingCond = $bucket['open']
-                ? "DATEDIFF(NOW(), jd.open_date) >= {$bucket['min']}"
-                : "DATEDIFF(NOW(), jd.open_date) BETWEEN {$bucket['min']} AND {$bucket['max']}";
+            // ✅ KEY CHANGE: hours-based ya days-based agingCond
+            if ($bucket['type'] === 'hours') {
+                // TIMESTAMPDIFF se hours calculate — open_date + open_time
+                if ($bucket['open']) {
+                    $agingCond = "TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) >= {$bucket['min']}";
+                } else {
+                    $agingCond = "TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) BETWEEN {$bucket['min']} AND {$bucket['max']}";
+                }
+            } else {
+                // DATEDIFF se days calculate — pehle jaisa
+                if ($bucket['open']) {
+                    $agingCond = "DATEDIFF(NOW(), jd.open_date) >= {$bucket['min']}";
+                } else {
+                    $agingCond = "DATEDIFF(NOW(), jd.open_date) BETWEEN {$bucket['min']} AND {$bucket['max']}";
+                }
+            }
 
-            // ✅ FIX 3: Battery = product_id NOT IN exclude list
             $bucketCases_battery[] = "
             SUM(CASE
                 WHEN ({$agingCond})
@@ -1067,7 +1071,6 @@ AND TIMESTAMPDIFF(
                 THEN 1 ELSE 0
             END) AS b_battery_{$i}";
 
-            // ✅ Inverter = product_id IN (1)
             $bucketCases_inverter[] = "
             SUM(CASE
                 WHEN ({$agingCond})
@@ -1075,7 +1078,6 @@ AND TIMESTAMPDIFF(
                 THEN 1 ELSE 0
             END) AS b_inverter_{$i}";
 
-            // ✅ Solar = product_id IN (6,10,11,12)
             $bucketCases_solar[] = "
             SUM(CASE
                 WHEN ({$agingCond})
@@ -1083,7 +1085,6 @@ AND TIMESTAMPDIFF(
                 THEN 1 ELSE 0
             END) AS b_solar_{$i}";
 
-            // ✅ Total = koi bhi product
             $bucketCases_total[] = "
             SUM(CASE
                 WHEN ({$agingCond})
@@ -1168,7 +1169,7 @@ AND TIMESTAMPDIFF(
     public static function generatependingCallByStatus($link1, $condition = [])
     {
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
 
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
@@ -1308,32 +1309,7 @@ AND TIMESTAMPDIFF(
         }
         $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
         // value , totoal
-        $sql = "SELECT
-        COUNT(jd.job_id) AS total_jobs,
-        SUM(
-            CASE 
-                WHEN jd.job_no IN (
-                    SELECT job_no
-                    FROM replacement_data
-                    WHERE 
-                        (
-                            replace_serial_no = ''
-                            AND repl_settle_cat = 'REPLACEMENT'
-                        )
-                        OR
-                        (
-                            repl_settle_cat IN ('MIPL_REPLACEMENT', 'CREDIT_NOTE')
-                            AND delivery_status = ''
-                        )
-                )
-                THEN 1
-                ELSE 0
-            END
-        ) AS rph
-    FROM jobsheet_data jd
-    LEFT JOIN locationuser_master lm 
-        ON lm.userloginid = jd.eng_id
-    WHERE jd.status IN ('82','8') $where";
+        $sql = "SELECT COUNT(jd.job_id) AS total_jobs, SUM( CASE WHEN jd.job_no IN ( SELECT job_no FROM replacement_data WHERE replace_serial_no = '' AND repl_settle_cat IN ('REPLACEMENT','') ) THEN 1 ELSE 0 END ) AS rph,SUM( CASE WHEN jd.job_no NOT IN ( SELECT job_no FROM replacement_data) THEN 1 ELSE 0 END ) AS rph_so FROM jobsheet_data jd LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id WHERE jd.status IN ('82','8') and lm.statusid='1' and jd.repl_type='Branch' $where";
 
         $result = mysqli_query($link1, $sql);
         if (!$result) return [];
@@ -1342,12 +1318,265 @@ AND TIMESTAMPDIFF(
         $pct = function($count) use ($totalJobs) {
             return $totalJobs > 0 ? round(($count / $totalJobs) * 100, 2) : 0;
         };
+        $assignedCount        = (int)($row['rph']+$row['rph_so']);
+        return [(string)$assignedCount,        $pct($assignedCount)."%"];
+    }
+    public static function distribtePendingData($link1,$condition=[]){
+        $where = " ";
+
+        if (isset($condition['date_range']) && !empty($condition['date_range'])) {
+            $date = (int)$condition['date_range'];
+            $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
+        }
+        if(isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        }
+        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
+            $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
+            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+        }
+
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = mysqli_real_escape_string($link1, $condition['product']);
+            if($productid==='1'){
+                // inverter
+                $where .= " AND jd.product_id in ('1') ";
+            }
+            if($productid==='2'){
+                // battery
+                $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
+            }
+            if ($productid==='3') {
+                // solor
+                $where .= " AND jd.product_id in ('6','10','11','12')";
+            }
+        }
+        if (isset($condition['state']) && !empty($condition['state'])) {
+            $stateid = mysqli_real_escape_string($link1, $condition['state']);
+            $where .= " AND jd.state_id = '{$stateid}' ";
+        }
+        if (isset($condition['enginner']) && !empty($condition['enginner'])) {
+            $engid = mysqli_real_escape_string($link1, $condition['enginner']);
+            $where .= " AND jd.eng_id = '{$engid}' ";
+        }
+        if (isset($condition['enginner_type']) && !empty($condition['enginner_type'])) {
+            $engType = mysqli_real_escape_string($link1, $condition['enginner_type']);
+            $where .= " AND lm.eng_type = '{$engType}' ";
+        }
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = (int)$condition['product'];
+            $where .= " AND jd.product_id = '{$productid}' ";
+        }
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        // value , totoal
+        $sql = "SELECT COUNT(jd.job_id) AS total_jobs, SUM( CASE WHEN jd.job_no IN ( SELECT job_no FROM replacement_data WHERE replace_serial_no = '' AND repl_settle_cat IN ('REPLACEMENT','') ) THEN 1 ELSE 0 END ) AS rph,SUM( CASE WHEN jd.job_no NOT IN ( SELECT job_no FROM replacement_data) THEN 1 ELSE 0 END ) AS rph_so FROM jobsheet_data jd LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id WHERE jd.status IN ('82','8') and lm.statusid='1' and jd.repl_type='Distributor' $where";
+
+        $result = mysqli_query($link1, $sql);
+        if (!$result) return [];
+        $row       = mysqli_fetch_assoc($result);
+        $totalJobs = (int)($row['total_jobs'] ?? 0);
+        $pct = function($count) use ($totalJobs) {
+            return $totalJobs > 0 ? round(($count / $totalJobs) * 100, 2) : 0;
+        };
+        $assignedCount        = (int)($row['rph']+$row['rph_so']);
+        return [(string)$assignedCount,        $pct($assignedCount)."%"];
+    }
+    public static function dealerPendingData($link1,$condition=[]){
+        $where = " ";
+
+        if (isset($condition['date_range']) && !empty($condition['date_range'])) {
+            $date = (int)$condition['date_range'];
+            $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
+        }
+        if(isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        }
+        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
+            $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
+            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+        }
+
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = mysqli_real_escape_string($link1, $condition['product']);
+            if($productid==='1'){
+                // inverter
+                $where .= " AND jd.product_id in ('1') ";
+            }
+            if($productid==='2'){
+                // battery
+                $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
+            }
+            if ($productid==='3') {
+                // solor
+                $where .= " AND jd.product_id in ('6','10','11','12')";
+            }
+        }
+        if (isset($condition['state']) && !empty($condition['state'])) {
+            $stateid = mysqli_real_escape_string($link1, $condition['state']);
+            $where .= " AND jd.state_id = '{$stateid}' ";
+        }
+        if (isset($condition['enginner']) && !empty($condition['enginner'])) {
+            $engid = mysqli_real_escape_string($link1, $condition['enginner']);
+            $where .= " AND jd.eng_id = '{$engid}' ";
+        }
+        if (isset($condition['enginner_type']) && !empty($condition['enginner_type'])) {
+            $engType = mysqli_real_escape_string($link1, $condition['enginner_type']);
+            $where .= " AND lm.eng_type = '{$engType}' ";
+        }
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = (int)$condition['product'];
+            $where .= " AND jd.product_id = '{$productid}' ";
+        }
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        // value , totoal
+        $sql = "SELECT COUNT(jd.job_id) AS total_jobs, SUM( CASE WHEN jd.job_no IN ( SELECT job_no FROM replacement_data WHERE replace_serial_no = '' AND repl_settle_cat IN ('REPLACEMENT','') ) THEN 1 ELSE 0 END ) AS rph,SUM( CASE WHEN jd.job_no NOT IN ( SELECT job_no FROM replacement_data) THEN 1 ELSE 0 END ) AS rph_so FROM jobsheet_data jd LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id WHERE jd.status IN ('82','8') and lm.statusid='1' and jd.repl_type='Dealer' $where";
+
+        $result = mysqli_query($link1, $sql);
+        if (!$result) return [];
+        $row       = mysqli_fetch_assoc($result);
+        $totalJobs = (int)($row['total_jobs'] ?? 0);
+        $pct = function($count) use ($totalJobs) {
+            return $totalJobs > 0 ? round(($count / $totalJobs) * 100, 2) : 0;
+        };
+        $assignedCount        = (int)($row['rph']+$row['rph_so']);
+        return [(string)$assignedCount,        $pct($assignedCount)."%"];
+    }
+    public static function distribtePendingDatatat3($link1,$condition=[]){
+        $where = " ";
+
+        if (isset($condition['date_range']) && !empty($condition['date_range'])) {
+            $date = (int)$condition['date_range'];
+            $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
+        }
+        if(isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        }
+        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
+            $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
+            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+        }
+
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = mysqli_real_escape_string($link1, $condition['product']);
+            if($productid==='1'){
+                // inverter
+                $where .= " AND jd.product_id in ('1') ";
+            }
+            if($productid==='2'){
+                // battery
+                $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
+            }
+            if ($productid==='3') {
+                // solor
+                $where .= " AND jd.product_id in ('6','10','11','12')";
+            }
+        }
+        if (isset($condition['state']) && !empty($condition['state'])) {
+            $stateid = mysqli_real_escape_string($link1, $condition['state']);
+            $where .= " AND jd.state_id = '{$stateid}' ";
+        }
+        if (isset($condition['enginner']) && !empty($condition['enginner'])) {
+            $engid = mysqli_real_escape_string($link1, $condition['enginner']);
+            $where .= " AND jd.eng_id = '{$engid}' ";
+        }
+        if (isset($condition['enginner_type']) && !empty($condition['enginner_type'])) {
+            $engType = mysqli_real_escape_string($link1, $condition['enginner_type']);
+            $where .= " AND lm.eng_type = '{$engType}' ";
+        }
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = (int)$condition['product'];
+            $where .= " AND jd.product_id = '{$productid}' ";
+        }
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        // value , totoal
+        $sql = "SELECT COUNT(jd.job_id) AS total_jobs, 
+       SUM( CASE WHEN jd.job_no IN 
+                      ( SELECT job_no FROM rpd_replacement_data 
+                    WHERE  delivery_status='' ) THEN 1 ELSE 0 END ) AS rph,
+       SUM( CASE WHEN jd.job_no NOT IN 
+                      ( SELECT job_no FROM rpd_replacement_data) THEN 1 ELSE 0 END ) AS rph_so FROM jobsheet_data jd 
+                          LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id 
+       WHERE jd.status IN ('82','8') and lm.statusid='1' and jd.repl_type='Distributor' $where";
+        $result = mysqli_query($link1, $sql);
+        if (!$result) return [];
+        $row       = mysqli_fetch_assoc($result);
+        $totalJobs = (int)($row['total_jobs'] ?? 0);
+        $pct = function($count) use ($totalJobs) {
+            return $totalJobs > 0 ? round(($count / $totalJobs) * 100, 2) : 0;
+        };
         $assignedCount        = (int)$row['rph'];
+        $assignedCount1        = (int)$row['rph_so'];
+        $assignedCount=$assignedCount+$assignedCount1;
+        return [(string)$assignedCount,        $pct($assignedCount)."%"];
+    }
+    public static function dealerPendingDatagtat3($link1,$condition=[]){
+        $where = " ";
+
+        if (isset($condition['date_range']) && !empty($condition['date_range'])) {
+            $date = (int)$condition['date_range'];
+            $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
+        }
+        if(isset($condition['zone']) && !empty($condition['zone'])) {
+            $zoneid  = mysqli_real_escape_string($link1, $condition['zone']);
+            $where .= " AND jd.state_id IN ( SELECT zm.stateid  FROM state_master zm  WHERE zm.zoneid IN ('{$zoneid}'))";
+        }
+        if(isset($condition['bsi']) && !empty($condition['bsi'])) {
+            $bsiId  = mysqli_real_escape_string($link1, $condition['bsi']);
+            $where .= " AND jd.eng_id IN ( SELECT userloginid  FROM locationuser_master  WHERE mapped_bsi in ('{$bsiId}'))";
+        }
+
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = mysqli_real_escape_string($link1, $condition['product']);
+            if($productid==='1'){
+                // inverter
+                $where .= " AND jd.product_id in ('1') ";
+            }
+            if($productid==='2'){
+                // battery
+                $where .= " AND jd.product_id NOT IN ('1','6','10','11','12','14') ";
+            }
+            if ($productid==='3') {
+                // solor
+                $where .= " AND jd.product_id in ('6','10','11','12')";
+            }
+        }
+        if (isset($condition['state']) && !empty($condition['state'])) {
+            $stateid = mysqli_real_escape_string($link1, $condition['state']);
+            $where .= " AND jd.state_id = '{$stateid}' ";
+        }
+        if (isset($condition['enginner']) && !empty($condition['enginner'])) {
+            $engid = mysqli_real_escape_string($link1, $condition['enginner']);
+            $where .= " AND jd.eng_id = '{$engid}' ";
+        }
+        if (isset($condition['enginner_type']) && !empty($condition['enginner_type'])) {
+            $engType = mysqli_real_escape_string($link1, $condition['enginner_type']);
+            $where .= " AND lm.eng_type = '{$engType}' ";
+        }
+        if (isset($condition['product']) && !empty($condition['product'])) {
+            $productid = (int)$condition['product'];
+            $where .= " AND jd.product_id = '{$productid}' ";
+        }
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        // value , totoal
+        $sql = "SELECT COUNT(jd.job_id) AS total_jobs, SUM( CASE WHEN jd.job_no IN ( SELECT job_no FROM rpd_replacement_data WHERE  delivery_status='' ) THEN 1 ELSE 0 END ) AS rph,SUM( CASE WHEN jd.job_no NOT IN ( SELECT job_no FROM rpd_replacement_data) THEN 1 ELSE 0 END ) AS rph_so FROM jobsheet_data jd LEFT JOIN locationuser_master lm ON lm.userloginid = jd.eng_id WHERE jd.status IN ('82','8') and lm.statusid='1' and jd.repl_type='Dealer' $where";
+        $result = mysqli_query($link1, $sql);
+        if (!$result) return [];
+        $row       = mysqli_fetch_assoc($result);
+        $totalJobs = (int)($row['total_jobs'] ?? 0);
+        $pct = function($count) use ($totalJobs) {
+            return $totalJobs > 0 ? round(($count / $totalJobs) * 100, 2) : 0;
+        };
+        $assignedCount        = (int)$row['rph'];
+        $assignedCount1        = (int)$row['rph_so'];
+        $assignedCount=$assignedCount+$assignedCount1;
         return [(string)$assignedCount,        $pct($assignedCount)."%"];
     }
     public static function rpdPendingData($link1,$condition){
         $where = " ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -1427,7 +1656,7 @@ AND TIMESTAMPDIFF(
     }
     public static function podPendingData($link1,$condition){
         $where = " ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -1482,8 +1711,8 @@ AND TIMESTAMPDIFF(
                     FROM rpd_replacement_data
                     WHERE 
                         replace_serial_no != ''
-                        AND delivery_status = 'YES'
-                        AND delivery_doc_path = ''
+                        AND delivery_status = ''
+                        
                 )
                 THEN 1
                 ELSE 0
@@ -1524,7 +1753,7 @@ AND TIMESTAMPDIFF(
     }
     public static function podPendingDataWithRph($link1,$condition){
         $where = " ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -1594,7 +1823,7 @@ AND TIMESTAMPDIFF(
         ON lm.userloginid = jd.eng_id
 
     WHERE jd.status IN ('82','8') $where";
-//        echo $sql;exit;
+
         $result = mysqli_query($link1, $sql);
         if (!$result) return [];
         $row       = mysqli_fetch_assoc($result);
@@ -1610,7 +1839,7 @@ AND TIMESTAMPDIFF(
     {
         // STATUS FILTER HAMESHA ACTIVE — conditional nahi
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' and lm.statusid='1' ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";
@@ -1687,7 +1916,7 @@ AND TIMESTAMPDIFF(
     public static function generateStackData($link1, $condition = [])
     {
         $where = " WHERE jd.status IN ('1','2','3','7','81') ";
-        $where .=" and jd.eng_id is not null and jd.eng_id <> '' AND jd.product_id IS NOT NULL AND jd.product_id <> '0' AND jd.product_id <> '' ";
+        $where .=" and jd.eng_id is not null and jd.eng_id <> '' AND jd.product_id IS NOT NULL AND jd.product_id <> '0' AND jd.product_id <> ''  and lm.statusid='1'  ";
         if (isset($condition['date_range']) && !empty($condition['date_range'])) {
             $date = (int)$condition['date_range'];
             $where .= " AND jd.open_date >= NOW() - INTERVAL {$date} DAY ";

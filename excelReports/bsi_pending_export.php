@@ -55,8 +55,10 @@ class DashoardLaoder_Export
             $bsiUser = $bsi['username'];
             $zone    = $this->getZone($bsiUser, $condition);
 
-            // FIX: Zone/State se engineer filter nahi — sirf engineer filter pass karo
             $engineers    = $this->fetchEngineers($bsiId, $condition);
+            if(count($engineers)===0){
+                continue;
+            }
             $engineerRows = [];
             $bsiTotals    = $this->emptyBucket();
 
@@ -64,7 +66,6 @@ class DashoardLaoder_Export
                 $engId   = $eng['userloginid'];
                 $engName = $eng['locusername'];
 
-                // FIX: Job fetch ke liye sirf ye conditions pass karo, zone/state nahi
                 $jobCondition = [
                     'date_range'  => $condition['date_range']  ?? '',
                     'segment'     => $condition['segment']     ?? '',
@@ -78,11 +79,12 @@ class DashoardLaoder_Export
                 $engData = $this->emptyBucket();
 
                 foreach ($jobs as $job) {
-                    $status = $job['status'];
-                    $aging  = (int)$job['aging_days'];
-                    $bucket = $this->getBucket($aging);
-                    if ($bucket === false) continue;
+                    $status      = $job['status'];
 
+                    $aging_hours = (int)$job['aging_hours'];
+                    $aging_days  = (int)$job['aging_days'];
+                    $bucket      = $this->getBucket($aging_hours, $aging_days);
+                    if ($bucket === false) continue;
                     if ($status == '2')      { $engData['assigned'][$bucket]++;    $engData['assigned_total']++; }
                     elseif ($status == '3')  { $engData['pna'][$bucket]++;         $engData['pna_total']++; }
                     elseif ($status == '7')  { $engData['wip'][$bucket]++;         $engData['wip_total']++; }
@@ -145,16 +147,19 @@ class DashoardLaoder_Export
 
     private function fetchEngineers($bsiId, $condition = [])
     {
-        // FIX: Zone/State filter hata diya — DashoardLaoder_1 ki tarah sirf bsiId + engineer filter
+        if(empty($bsiId)){
+            return [];
+        }
+
         $bsiId = mysqli_real_escape_string($this->connection, $bsiId);
-        $where = " WHERE lum.mapped_bsi = '{$bsiId}' ";
+        $where = " WHERE  lum.mapped_bsi = '{$bsiId}' and lum.mapped_bsi is not null and lum.mapped_bsi <>'' and lum.statusid='1' ";
 
         if (!empty($condition['enginner'])) {
             $e     = mysqli_real_escape_string($this->connection, $condition['enginner']);
             $where .= " AND lum.userloginid = '{$e}' ";
         }
 
-        $sql    = "SELECT lum.locusername, lum.userloginid FROM locationuser_master lum {$where}";
+        $sql    = "SELECT DISTINCT lum.locusername, lum.userloginid FROM locationuser_master lum {$where}";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
         $rows = [];
@@ -164,9 +169,8 @@ class DashoardLaoder_Export
 
     private function fetchJobs($engId, $condition = [])
     {
-        // FIX: Zone/State filter hata diya — BSI/Engineer already filter ho chuke hain upar se
         $engId = mysqli_real_escape_string($this->connection, $engId);
-        $where = "";
+        $where = "and jd.eng_id is NOT null and jd.eng_id <> '' AND jd.eng_id in ( SELECT lum.userloginid FROM locationuser_master lum WHERE lum.mapped_bsi is not null and lum.mapped_bsi <>'' and lum.statusid='1')";
 
         if (!empty($condition['date_range'])) {
             $where .= " AND jd.open_date >= NOW() - INTERVAL " . (int)$condition['date_range'] . " DAY ";
@@ -185,12 +189,16 @@ class DashoardLaoder_Export
             $where .= " AND jd.product_id = '" . (int)$condition['sub_segment'] . "' ";
         }
 
-        // FIX: Status '0' add kiya — DashoardLaoder_1 ki tarah
-        $sql    = "SELECT jd.*, DATEDIFF(NOW(), jd.open_date) as aging_days
-                   FROM jobsheet_data jd
-                   WHERE jd.eng_id = '{$engId}' 
-                     AND jd.status IN ('0','1','2','3','7','81') 
-                     {$where}";
+        // ✅ aging_hours + aging_days dono fetch ho rahe hain
+        $sql = "
+        SELECT jd.*,
+            DATEDIFF(NOW(), jd.open_date) AS aging_days,
+            TIMESTAMPDIFF(HOUR, CONCAT(jd.open_date, ' ', jd.open_time), NOW()) AS aging_hours
+        FROM jobsheet_data jd
+        WHERE jd.eng_id = '{$engId}' 
+          AND jd.status IN ('1','2','3','7','81') 
+          {$where}
+    ";
         $result = mysqli_query($this->connection, $sql);
         if (!$result) return [];
         $rows = [];
@@ -210,15 +218,20 @@ class DashoardLaoder_Export
         ];
     }
 
-    public function getBucket($aging)
+    // CHANGED: Ab $aging = hours mein hai
+    // ✅ B1 & B2 = hours based | B3–B6 = days based
+    public function getBucket($aging_hours, $aging_days)
     {
-        if ($aging < 0)                   return false;
-        if ($aging <= 1)                  return 'b1';
-        if ($aging == 2)                  return 'b2';
-        if ($aging >= 3  && $aging <= 5)  return 'b3';
-        if ($aging >= 6  && $aging <= 10) return 'b4';
-        if ($aging >= 11 && $aging <= 15) return 'b5';
-        if ($aging >= 16)                 return 'b6';
+        if ($aging_hours < 0)                        return false;
+        if ($aging_hours <= 24)                      return 'b1'; // ≤ 24 hrs
+        if ($aging_hours > 24 && $aging_hours <= 48) return 'b2'; // > 24 hrs & ≤ 48 hrs
+
+        // B3 se aage — days based
+        if ($aging_days >= 3  && $aging_days <= 5)   return 'b3';
+        if ($aging_days >= 6  && $aging_days <= 10)  return 'b4';
+        if ($aging_days >= 11 && $aging_days <= 15)  return 'b5';
+        if ($aging_days >= 16)                       return 'b6';
+
         return false;
     }
 
@@ -323,7 +336,7 @@ foreach (['C1','J1','Q1','X1'] as $c) {
 // ── 7. Row 2 — Bucket Sub-Headers 
 // PHPExcel getCellByColumnAndRow is 0-indexed for columns
 // C=2, J=9, Q=16, X=23
-$bucketLabels = ['0-1 Days', '2 Days', '3-5 Days', '6-10 Days', '11-15 Days', 'Above 15', 'Total'];
+$bucketLabels = ['<=24HRS', '<=48 HRS', '3-5 Days', '6-10 Days', '11-15 Days', 'Above 15', 'Total'];
 $startCols    = [2, 9, 16, 23]; // 0-based: C=2, J=9, Q=16, X=23
 
 foreach ($startCols as $startCol) {

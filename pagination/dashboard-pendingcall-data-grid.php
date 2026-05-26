@@ -31,7 +31,7 @@ $userid=$_SESSION['userid']??'';
 $sapid=$_SESSION['sapid']??'';
 $user=loaderUser_12($link1,$sapid,$userid);
 
-header("Content-type: application/json");
+//header("Content-type: application/json");
 
 
 /**
@@ -81,6 +81,7 @@ class FormInputHandling{
 
     public static function cardData($link1,$condition){
         $pending_2_days=DataFetchingFromDB::pendingDays($link1,$condition);
+
         return [
             "total_pending_calls"=>DataFetchingFromDB::totoalPendingCall($link1,$condition),
             "avg_aging"=>DataFetchingFromDB::avgAging($link1,$condition),
@@ -115,8 +116,20 @@ class FormInputHandling{
     public static function rphPending($link1,$condition=[]){
         return DataFetchingFromDB::rphPendingData($link1,$condition);
     }
+    public static function distributerPending($link1,$condition=[]){
+        return DataFetchingFromDB::distribtePendingData($link1,$condition);
+    }
+    public static function dialerPending($link1,$condition=[]){
+        return DataFetchingFromDB::dealerPendingData($link1,$condition);
+    }
+    public static function distributerPendingtat3($link1,$condition=[]){
+        return DataFetchingFromDB::distribtePendingDatatat3($link1,$condition);
+    }
+    public static function dialerPendingtat3($link1,$condition=[]){
+        return DataFetchingFromDB::dealerPendingDatagtat3($link1,$condition);
+    }
     public static function rpdPending($link1,$condition=[]){
-        return DataFetchingFromDB::rpdPendingData($link1,$condition);
+        return [0,0];
     }
     public static function podPending($link1,$condition=[]){
         return DataFetchingFromDB::podPendingData($link1,$condition);
@@ -179,8 +192,13 @@ if(isset($_REQUEST['form_submit'])){
     $wrapper_data['aging_snapshot']=FormInputHandling::agingSnapshotData($link1,$condition);
     $wrapper_data['pending_call_by_status']=FormInputHandling::pending_call_by_status($link1,$condition);
     $wrapper_data['stack_data']=FormInputHandling::stackData($link1,$condition);
+
     $wrapper_data['pending_replacement_settlement']=[
         "rph_pending"=>FormInputHandling::rphPending($link1,$condition),
+        "distributor_pending"=>FormInputHandling::distributerPending($link1,$condition),
+        "dealer_pending"=>FormInputHandling::dialerPending($link1,$condition),
+        "distributor_pending_tat3"=>FormInputHandling::distributerPendingtat3($link1,$condition),
+        "dealer_pending_tat3"=>FormInputHandling::dialerPendingtat3($link1,$condition),
         "rprd_pending"=>FormInputHandling::rpdPending($link1,$condition),
         "pord_pending"=>FormInputHandling::podPending($link1,$condition),
         "pord_pending_rph"=>FormInputHandling::podPendingRPH($link1,$condition),

@@ -69,6 +69,18 @@ $pagination='dashboard-pendingcall-data-grid.php';
     <script type="text/javascript" src="../js/jquery.validate.js"></script>
     <script type="text/javascript" src="../js/common_js.js"></script>
     <style>
+        /* Existing .chart-card ke saath yeh add karo */
+        .charts-row1 > * {
+            min-width: 0;        /* Grid blowout rokta hai */
+            overflow: hidden;    /* Content bahar nahi jaayega */
+        }
+
+        .status-card {
+            min-width: 0;
+            overflow: hidden;
+            width: 100%;         /* Explicitly full grid cell lega */
+        }
+
         /* Card */
         .card {
             background: #ffffff;
@@ -285,6 +297,8 @@ $pagination='dashboard-pendingcall-data-grid.php';
         th.text-center, td.text-center { text-align: center; }
 
         tbody tr { border-bottom: 1px solid #f9fafb; }
+        /*tbody tr:nth-child(1) td:first-child { font-size: 10px; }*/
+        /*tbody tr:nth-child(2) td:first-child { font-size: 10px; }*/
         tbody tr:hover { background: #f8fafc; }
         td { padding: 8px; color: #374151; }
 
@@ -297,6 +311,15 @@ $pagination='dashboard-pendingcall-data-grid.php';
         .status-list { display: flex; flex-direction: column; gap: 12px; }
         .status-item { display: flex; align-items: center; gap: 12px; }
 
+        .status-card .status-list {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .progress-bg {
+            width: 100% !important;  /* Override any inline width */
+            box-sizing: border-box;
+        }
         .status-icon {
             width: 28px; height: 28px;
             border-radius: 50%;
@@ -466,24 +489,35 @@ $pagination='dashboard-pendingcall-data-grid.php';
             transform: translateX(0);
         }
     </style>
+    <style>
+        .full-width{
+            width: 100% !important;
+            transition: all 0.4s ease-in-out;
+        }
+
+        .hide_nav_{
+            transform: translateX(-100%);
+            display: none;
+            transition: all 0.4s ease-in-out;
+        }
+    </style>
 </head>
 <body>
 
 <div class="container-fluid">
     <div class="row content">
-        <?php
-        include("../includes/leftnav2.php");
-        ?>
+        <div  id="hide_nav_">
+            <?php include("../includes/leftnav2.php"); ?>
+        </div>
         <div class="<?=$screenwidth?> tab-pane fade in active" id="home">
             <!-- Header -->
-            <div class="card header" style="display: none;">
-                <div style="display: none" class="header-left">
-                    <button class="icon-btn">
-                        <svg width="20" height="20" fill="none" style="display: none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <div class="card header" style="">
+                <div style="" class="header-left">
+                    <button class="icon-btn" onclick="collNav(this)">
+                        <i class="fa fa-bars" style="background: white"></i>
                     </button>
                     <div>
                         <h1 class="header-title">Dashboard</h1>
-                        <p class="header-subtitle">Real-time overview</p>
                     </div>
                 </div>
                 <div class="header-right" style="visibility: hidden">
@@ -607,7 +641,7 @@ $pagination='dashboard-pendingcall-data-grid.php';
                   <!-- High Priority -->
                   <div class="card stat-card col-span-2" style="grid-column: span 2;">
                       <div>
-                          <p class="stat-label">High Priority Pending</p>
+                          <p class="stat-label">Red Alert (>5 Days Call)</p>
                           <p class="stat-value text-red mono" id="hight_priority_pending">212</p>
                           <p class="stat-sub">High priority calls</p>
                       </div>
@@ -719,11 +753,11 @@ $pagination='dashboard-pendingcall-data-grid.php';
                   </div>
               </div>
 
-              <!-- Bottom Section -->
+
               <div class="bottom-section">
-                  <!-- Aging Snapshot Table -->
+
                   <div class="card chart-card">
-                      <h2 class="chart-title" style="margin-bottom:12px;">Aging Snapshot (By Buckets)</h2>
+                      <h2 class="chart-title" style="margin-bottom:12px;">Aging Snapshot (By Buckets) </h2>
                       <div class="table-wrapper">
                           <table id="snapshot_table" style="border: 2px solid rgba(128,128,128,0.26);border-radius: 15px;!important;">
                               <thead>
@@ -779,7 +813,7 @@ $pagination='dashboard-pendingcall-data-grid.php';
                       </div>
                       <!-- SLA Breached -->
                       <div class="card info-card sla-card">
-                          <p class="info-label">SLA Breached</p>
+                          <p class="info-label">SLA Breached (>72HRS)</p>
                           <p class="info-value-lg text-red mono" id="sla_breached">98</p>
                           <p class="info-sub">SLA breached calls</p>
                       </div>
@@ -801,6 +835,7 @@ $pagination='dashboard-pendingcall-data-grid.php';
                               <div id="stateChart"></div>
                           </div>
                       </div>
+
                       <div class="col-md-6">
                           <div class="card status-card">
                               <div class="chart-header-left" style="margin-bottom:12px;">
@@ -808,21 +843,50 @@ $pagination='dashboard-pendingcall-data-grid.php';
                                   <span class="chart-info">ℹ</span>
                               </div>
                               <div class="status-list">
-                                  <!-- Assigned -->
+                                  <!-- Branch Pending -->
                                   <div class="status-item">
                                       <div class="status-icon si-blue">
                                           <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
                                       </div>
                                       <div class="status-detail">
                                           <div class="status-row" id="rph_pending">
-                                              <span class="status-name">RPH Pending </span>
+                                              <span class="status-name">Branch Pending (TAT-2) </span>
                                               <span class="status-count">512 <span class="status-pct">(41.0%)</span></span>
                                           </div>
                                           <div class="progress-bg"><div class="progress-fill fill-blue" style="width:41%"></div></div>
                                       </div>
                                   </div>
-                                  <!-- Part Not Available -->
+
+                                  <!-- Distributor Pending (TAT-2) -->
                                   <div class="status-item">
+                                      <div class="status-icon si-blue">
+                                          <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                                      </div>
+                                      <div class="status-detail">
+                                          <div class="status-row" id="distributor_pending">
+                                              <span class="status-name">Distributor Pending (TAT-2) </span>
+                                              <span class="status-count">512 <span class="status-pct">(41.0%)</span></span>
+                                          </div>
+                                          <div class="progress-bg"><div class="progress-fill fill-blue" style="width:41%;background: #9a3412"></div></div>
+                                      </div>
+                                  </div>
+
+                                  <!-- Dealer Pending (TAT-2) -->
+                                  <div class="status-item">
+                                      <div class="status-icon si-blue">
+                                          <svg width="14" height="14" fill="currentColor" viewBox="0 0 20 20"><path d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"/></svg>
+                                      </div>
+                                      <div class="status-detail">
+                                          <div class="status-row" id="dealter_pending">
+                                              <span class="status-name">Dealer Pending (TAT-2) </span>
+                                              <span class="status-count">512 <span class="status-pct">(41.0%)</span></span>
+                                          </div>
+                                          <div class="progress-bg"><div class="progress-fill" style="width:41%;background: red"></div></div>
+                                      </div>
+                                  </div>
+
+                                  <!-- RPD Pending (TAT-3 ) -->
+                                  <div class="status-item" style="display: none">
                                       <div class="status-icon si-orange">
                                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
                                       </div>
@@ -834,7 +898,37 @@ $pagination='dashboard-pendingcall-data-grid.php';
                                           <div class="progress-bg"><div class="progress-fill fill-orange" style="width:23%"></div></div>
                                       </div>
                                   </div>
-                                  <!-- Work In Progress -->
+
+
+<!--                                  Distributor Pending (TAT-3)-->
+                                  <div class="status-item">
+                                      <div class="status-icon si-orange">
+                                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                      </div>
+                                      <div class="status-detail">
+                                          <div class="status-row" id="distributor_pending_tat3">
+                                              <span class="status-name"> Distributor Pending (TAT-3)</span>
+                                              <span class="status-count">286 <span class="status-pct">(22.9%)</span></span>
+                                          </div>
+                                          <div class="progress-bg"><div class="progress-fill fill-orange" style="width:23%"></div></div>
+                                      </div>
+                                  </div>
+<!--                                  Dealer Pending (TAT-3)-->
+                                  <div class="status-item" >
+                                      <div class="status-icon si-orange">
+                                          <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+                                      </div>
+                                      <div class="status-detail">
+                                          <div class="status-row" id="dealer_pending_tat3">
+                                              <span class="status-name">Dealer Pending (TAT-3)</span>
+                                              <span class="status-count">286 <span class="status-pct">(22.9%)</span></span>
+                                          </div>
+                                          <div class="progress-bg"><div class="progress-fill " style="width:23%;background: #2aabd2"></div></div>
+                                      </div>
+                                  </div>
+
+
+<!--                                    POD Pending (TAT-3)  -->
                                   <div class="status-item">
                                       <div class="status-icon si-yellow">
                                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -847,11 +941,12 @@ $pagination='dashboard-pendingcall-data-grid.php';
                                           <div class="progress-bg"><div class="progress-fill fill-yellow" style="width:20%"></div></div>
                                       </div>
                                   </div>
-                                  <div class="status-item">
+<!--                                  POD Pending RPH-->
+                                  <div class="status-item" style="display: none;">
                                       <div class="status-icon si-yellow">
                                           <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                       </div>
-                                      <div class="status-detail">
+                                      <div class="status-detail" >
                                           <div class="status-row" id="pod_pending_rph">
                                               <span class="status-name">POD Pending RPH (TAT-3 )</span>
                                               <span class="status-count">248 <span class="status-pct">(19.9%)</span></span>
@@ -877,7 +972,7 @@ include("../includes/footer.php");
 include("../includes/connection_close.php");
 ?>
 
-<!-- GLOBAL LOADER -->
+
 <div id="dashboardLoader" class="dashboard-loader">
     <div class="loader-box">
         <div class="spinner"></div>
@@ -892,6 +987,20 @@ include("../includes/connection_close.php");
         title: { text: '' },
         tooltip: { borderRadius: 8, shadow: false }
     });
+
+    function collNav(e){
+        const home=document.getElementById("home");//style="width: 100%;"
+        const nav=document.getElementById("hide_nav_");
+        nav.classList.toggle('hide_nav_');
+        home.classList.toggle("full-width");
+        console.log(event);
+        setTimeout(function () {
+            Highcharts.charts.forEach(function (chart) {
+                if (chart) chart.reflow();
+            });
+        }, 420);
+    }
+
 
     async function getAllDataFetchFromServer() {
         const response = await fetch(
@@ -1296,17 +1405,27 @@ include("../includes/connection_close.php");
     DashboardCreations.prototype.ReplacementSettlement = function (pending_replacement_settlement) {
         const items = [
             { id: '#rph_pending',     key: 'rph_pending'     },
+            { id: '#distributor_pending',key: 'distributor_pending'     },
+            { id: '#dealter_pending',  key: 'dealer_pending'     },
             { id: '#rpd_pending',     key: 'rprd_pending'    },
             { id: '#pod_pending',     key: 'pord_pending'    },
-            { id: '#pod_pending_rph', key: 'pord_pending_rph'}
+            { id: '#pod_pending_rph', key: 'pord_pending_rph'},
+            { id: '#distributor_pending_tat3', key: 'distributor_pending_tat3'},
+            { id: '#dealer_pending_tat3', key: 'dealer_pending_tat3'}
         ];
         items.forEach(({ id, key }) => {
             const el = document.querySelector(id);
             if (!el || !pending_replacement_settlement[key]) return;
+
+            const rawPct = pending_replacement_settlement[key][1]; // e.g. "112.5%"
+
+            // 100 se upar jaane par cap kar do
+            const cappedPct = Math.min(parseFloat(rawPct), 100) + '%';
+
             el.querySelector(".status-count").innerHTML =
-                `${pending_replacement_settlement[key][0]} <span class="status-pct">(${pending_replacement_settlement[key][1]})</span>`;
-            el.closest(".status-detail").querySelector(".progress-fill").style.width =
-                pending_replacement_settlement[key][1];
+                `${pending_replacement_settlement[key][0]} <span class="status-pct">(${rawPct})</span>`;
+
+            el.closest(".status-detail").querySelector(".progress-fill").style.width = cappedPct;
         });
     };
 
