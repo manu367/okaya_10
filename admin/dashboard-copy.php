@@ -1057,6 +1057,13 @@ include("../includes/connection_close.php");
 </div>
 
 <script>
+    function MANU(msg){
+        console.error(msg);
+    }
+    (function(){
+        throw new MANU("this is worng data here");
+    })();
+
     async function fetchBarJobData(category){
         category = category.replace(/\s*days?/i, '').trim();
         const response=await fetch(`../pagination/<?=$pagination?>?bar_bucket=${category}`)

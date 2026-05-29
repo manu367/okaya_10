@@ -1279,7 +1279,10 @@ include("../includes/connection_close.php");
             formdata.set('form_submit',   '1');
 
             const controller = new AbortController();
-            const timeout    = setTimeout(() => controller.abort(), 15000);
+            const timeout    = setTimeout(() => {
+                controller.abort();
+                document.getElementById("dashboard_m").classList.add("hidden");
+            }, 150000);
 
             const response = await fetch('../pagination/<?=$pagination?>', {
                 method: "POST",
@@ -1289,16 +1292,23 @@ include("../includes/connection_close.php");
 
             clearTimeout(timeout);
 
-            if (!response.ok) throw new Error("Server error : " + response.status);
+            if (!response.ok) {
+                document.getElementById("dashboard_m").classList.add("hidden");
+                throw new Error("Server error : " + response.status);
+            }
 
             let data;
             try {
                 data = await response.json();
             } catch (err) {
+                document.getElementById("dashboard_m").classList.add("hidden");
                 throw new Error("Invalid server response");
             }
 
-            if (!data) throw new Error("No data received from server");
+            if (!data){
+                document.getElementById("dashboard_m").classList.add("hidden");
+                throw new Error("No data received from server");
+            }
 
             // ---- Cards ----
             document.getElementById("total_pending_calls").innerText    = data.cards_data.total_pending_calls;
@@ -1380,6 +1390,7 @@ include("../includes/connection_close.php");
             this.ReplacementSettlement(data.pending_replacement_settlement);
 
         } catch (error) {
+            document.getElementById("dashboard_m").classList.add("hidden");
             console.error(error);
             this.hideLoader();
 

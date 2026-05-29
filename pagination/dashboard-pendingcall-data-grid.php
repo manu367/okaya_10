@@ -31,7 +31,7 @@ $userid=$_SESSION['userid']??'';
 $sapid=$_SESSION['sapid']??'';
 $user=loaderUser_12($link1,$sapid,$userid);
 
-//header("Content-type: application/json");
+header("Content-type: application/json");
 
 
 /**
