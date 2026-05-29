@@ -122,8 +122,8 @@ class TATCAllDBOps{
             $from_date = trim($dates[0]) . " 00:00:00";
             $to_date   = trim($dates[1]) . " 23:59:59";
 
-        } else {
-
+        }
+        else {
             $from_date = date('Y-m-d 00:00:00');
             $to_date   = date('Y-m-d 23:59:59');
         }
@@ -217,108 +217,33 @@ LEFT JOIN locationuser_master lum on
         // Final Query
         $sql = "
         SELECT
-
-            SUM(
-                CASE 
-                    WHEN tat_hours <= 24
-                    THEN 1 ELSE 0
-                END
-            ) AS b_24,
-
-            SUM(
-                CASE 
-                    WHEN tat_hours > 24
-                    AND tat_hours <= 36
-                    THEN 1 ELSE 0
-                END
-            ) AS b_36,
-
-            SUM(
-                CASE 
-                    WHEN tat_hours > 36
-                    AND tat_hours <= 48
-                    THEN 1 ELSE 0
-                END
-            ) AS b_48,
-
-            SUM(
-                CASE 
-                    WHEN tat_hours > 48
-                    AND tat_hours <= 72
-                    THEN 1 ELSE 0
-                END
-            ) AS b_72,
-
-            SUM(
-                CASE 
-                    WHEN tat_hours > 72
-                    THEN 1 ELSE 0
-                END
-            ) AS b_72_plus,
-
+        SUM( CASE  WHEN tat_hours <= 24 THEN 1 ELSE 0 END ) AS b_24,
+        SUM( CASE  WHEN tat_hours >  24 AND  tat_hours <= 36 THEN 1 ELSE 0   END ) AS b_36,
+        SUM( CASE  WHEN tat_hours >  36 AND  tat_hours <= 48 THEN 1 ELSE  0  END  ) AS b_48,
+        SUM( CASE  WHEN tat_hours >  48 AND  tat_hours <= 72 THEN 1 ELSE  0  END  ) AS b_72,
+        SUM( CASE  WHEN tat_hours > 72  THEN 1 ELSE 0 END ) AS b_72_plus,
             COUNT(*) AS grand_total
-
         FROM (
-
-            SELECT
-
-                CASE
-
-                    -- STATUS 10,12,48
-                    WHEN jd.status IN (10,12,48)
-
-                    THEN TIMESTAMPDIFF(
-                            HOUR,
-                            TIMESTAMP(jd.open_date, jd.open_time),
-                            TIMESTAMP(jd.close_date, jd.close_time)
-                         )
-
-                    -- STATUS 8,82
+            SELECT CASE WHEN jd.status IN (10,12,48)
+                    THEN TIMESTAMPDIFF(HOUR,TIMESTAMP(jd.open_date, jd.open_time),TIMESTAMP(jd.close_date, jd.close_time))            
                     WHEN jd.status IN (8,82)
-
-                    THEN TIMESTAMPDIFF(
-                            HOUR,
-                            TIMESTAMP(jd.open_date, jd.open_time),
-                            TIMESTAMP(jd.repl_appr_date, jd.repl_appr_time)
-                         )
-
-                END AS tat_hours
-
+                    THEN TIMESTAMPDIFF(HOUR,TIMESTAMP(jd.open_date, jd.open_time),TIMESTAMP(jd.repl_appr_date, jd.repl_appr_time)) END AS tat_hours
             FROM jobsheet_data jd
-
             LEFT JOIN locationuser_master lum
                 ON jd.eng_id = lum.userloginid
-
             $where
 
-            AND (
-
-                    (
-                        jd.status IN (10,12,48)
-
-                        AND TIMESTAMP(jd.close_date, jd.close_time)
-                        BETWEEN '$from_date'
-                        AND '$to_date'
-                    )
-
-                    OR
-
-                    (
-                        jd.status IN (8,82)
-
-                        AND TIMESTAMP(jd.repl_appr_date, jd.repl_appr_time)
-                        BETWEEN '$from_date'
-                        AND '$to_date'
-                    )
-
-                )
-
+            AND 
+            (
+            (jd.status IN (10,12,48)
+            AND TIMESTAMP(jd.close_date, jd.close_time) BETWEEN '$from_date' AND '$to_date' )
+            OR
+            ( jd.status IN (8,82) AND TIMESTAMP(jd.repl_appr_date, jd.repl_appr_time) BETWEEN '$from_date' AND '$to_date')
+            )
             AND jd.open_date IS NOT NULL
             AND jd.open_date <> '0000-00-00'
-
             AND jd.open_time IS NOT NULL
             AND jd.open_time <> ''
-
         ) AS tat_sub
     ";
 
