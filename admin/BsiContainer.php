@@ -284,6 +284,7 @@ class BSIUILoader implements UILoader{
             {$condition}
             ORDER BY state
         ";
+
         $result = mysqli_query($this->connection, $query);
 
         echo '<div class="filter-group">';

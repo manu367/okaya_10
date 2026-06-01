@@ -1,11 +1,7 @@
 <?php
-	require_once("../includes/config.php");
-	////get access product details
-	////get access brand details
+require_once("../includes/config.php");
 $arrstate = getAccessState($_SESSION['userid'],$link1);
-	
-	
-	?>
+?>
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,7 +18,6 @@ $arrstate = getAccessState($_SESSION['userid'],$link1);
 <!-- datatable plugin-->
 <link rel="stylesheet" href="../css/jquery.dataTables.min.css">
 <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
-<!--  -->
 <script type="text/javascript" language="javascript" >
 	$(document).ready(function(){
 		$('input[name="daterange"]').daterangepicker({

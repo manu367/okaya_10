@@ -1,0 +1,19 @@
+Chrome Extension banana web development ka ek alag jungle hai.
+Yaha HTML + CSS + JS to chalta hi hai,
+but
+browser APIs,
+permissions,
+manifest system,
+background workers
+— ye sab bhi samajhna padta hai.
+
+Chrome Extension ka Basic Architectur
+Har Chrome extension me mostly ye cheeze hoti hain:
+1. manifest.json =Extension ka brain/configuration
+2. popup.html = UI jo extension icon click par khulta hai
+3. popup.js = Popup ka logic
+4. background.js / service-worker.js = Background tasks
+5. content.js = Website ke andar JS inject karna
+6. icons/ = Extension icons
+
+popup-sections.css

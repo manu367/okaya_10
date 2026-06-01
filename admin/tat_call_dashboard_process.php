@@ -140,10 +140,16 @@ class AdminFilterUILoader implements UILoaderTAT{
     function bsiDisplay($req)
     {
         $state = $req['state']??'';
-        $bsi           = $req['bsi'];
+        $bsi           = $req['bsi']??'';
         $allSelected   = (empty($bsi) || $bsi == '') ? 'selected' : '';
 
-        $condition_bsi = "AND ar.stateid = '" . mysqli_real_escape_string($this->connection, $state) . "'";
+        $condition_bsi = '';
+        if (!empty($state)) {
+            $condition_bsi = "AND ar.stateid = '"
+                . mysqli_real_escape_string($this->connection, $state)
+                . "'";
+        }
+//        $condition_bsi = "AND ar.stateid = '" . mysqli_real_escape_string($this->connection, $state) . "'";
 
         $sql    = "SELECT au.sapid, au.name
                    FROM access_region ar
@@ -157,7 +163,7 @@ class AdminFilterUILoader implements UILoaderTAT{
 
         echo '<div>';
         echo '<label class="filter-label">BSI</label>';
-        echo '<select class="filter-select" id="bsi_filter">';
+        echo '<select name="bsi" class="filter-select" id="bsi_filter">';
         echo '<option value="">All BSIs</option>';
         while ($row = mysqli_fetch_assoc($result)) {
             $sel = $this->selected($bsi, $row['sapid']);
@@ -424,12 +430,18 @@ class BSIFilterUILoader implements UILoaderTAT{
     function bsiDisplay($req)
     {
         $state = $req['state']??'';
-        $bsi           = $req['bsi'];
+        $bsi           = $req['bsi']??'';
         $allSelected   = (empty($bsi) || $bsi == '') ? 'selected' : '';
 
-        if($state!==''){
-            $condition_bsi = "AND ar.stateid = '" . mysqli_real_escape_string($this->connection, $state) . "'";
+        $condition_bsi = '';
+        if (!empty($state)) {
+            $condition_bsi = "AND ar.stateid = '"
+                . mysqli_real_escape_string($this->connection, $state)
+                . "'";
         }
+//        if($state!==''){
+//            $condition_bsi = "AND ar.stateid = '" . mysqli_real_escape_string($this->connection, $state) . "'";
+//        }
 
         $sql    = "SELECT au.sapid, au.name
                    FROM access_region ar
@@ -641,7 +653,8 @@ interface LoadCard{
 }
 
 /*
- Component (card-1 (fullwidth), card2,card3,card4 (33.33 x 3) , card5 , card 6 (40% , 60%), card 7.... nth Card (50% width) )
+ Component (card-1 (fullwidth), card2,card3,card4 (33.33 x 3) , card5 , card 6 (40% , 60%),
+card 7.... nth Card (50% width) )
  $ui->render(1,'card')
  */
 class UIRender {

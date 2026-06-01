@@ -968,13 +968,6 @@ include("../includes/connection_close.php");
         this.tat_zone_list.innerHTML = html;
     };
 
-    // ============================================================
-    //  setAllData — master setter
-    //  Handles JSON keys:
-    //    card_data, line_chart,
-    //    call_by_tat_1, call_by_tat_2, call_by_tat_3,
-    //    avg_tat_by_product, zone_wise_tat
-    // ============================================================
     TatDocmentManager.prototype.setAllData = function (data) {
         if (data.card_data)           this.setCardData(data.card_data);
         if (data.line_chart)          drawTrendChart(data.line_chart.x_axis, data.line_chart.series);
