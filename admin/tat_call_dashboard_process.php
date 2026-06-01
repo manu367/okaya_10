@@ -348,10 +348,7 @@ class AdminFilterUILoader implements UILoaderTAT{
     }
 }
 class BSIFilterUILoader implements UILoaderTAT{
-
-    private $connection;
-    private $session_userid;
-    private $arrstate,$access_product;
+    private $connection,$session_userid,$arrstate,$access_product;
     public function __construct($connetion,$session_userid,$arrstate,$access_product ){
         $this->connection=$connetion;
         $this->session_userid=$session_userid;
@@ -370,7 +367,6 @@ class BSIFilterUILoader implements UILoaderTAT{
     {
         // TODO: Implement typeofUser() method.
     }
-
     function zoneDisplay($req)
     {
         $zone   = $req['zone']??'';
@@ -396,7 +392,6 @@ class BSIFilterUILoader implements UILoaderTAT{
         echo "</select>";
         echo "</div>";
     }
-
     function stateDisplay($req){
         $zone          = $req['zone']??'';
         $selectedState = $req['state']??'';
@@ -426,7 +421,6 @@ class BSIFilterUILoader implements UILoaderTAT{
         echo '</select>';
         echo '</div>';
     }
-
     function bsiDisplay($req)
     {
         $state = $req['state']??'';
@@ -468,8 +462,6 @@ class BSIFilterUILoader implements UILoaderTAT{
         echo '</select>';
         echo '</div>';
     }
-
-
     function enginnertype($req){
         $enginner_type = $req['enginner_type']??'';
         $query="SELECT eng_type FROM `locationuser_master` WHERE eng_type is not null and eng_type <> '' GROUP by eng_type";
@@ -652,22 +644,264 @@ interface LoadCard{
     function loadcard();
 }
 
-/*
- Component (card-1 (fullwidth), card2,card3,card4 (33.33 x 3) , card5 , card 6 (40% , 60%),
-card 7.... nth Card (50% width) )
- $ui->render(1,'card')
- */
+class KPIsCardLoader implements LoadCard {
+    public function loadcard()
+    {
+        echo '<div class="tat-kpi-grid" style="margin-top:20px;">
+                    <!-- Total Jobs -->
+                    <div id="total_jobs" class="tat-kpi-card tat-kc-blue tat-anim" style="animation-delay:.05s">
+                        <div class="tat-kpi-top">
+                            <div class="tat-kpi-label">Total Closed Jobs</div>
+                            <div class="tat-kpi-icon">📋</div>
+                        </div>
+                        <div class="tat-kpi-value">—</div>
+                        <div class="tat-kpi-sub">This period</div>
+                    </div>
+
+                    <!-- Avg TAT -->
+                    <div id="avg_tat_card" class="tat-kpi-card tat-kc-purple tat-anim" style="animation-delay:.09s">
+                        <div class="tat-kpi-top">
+                            <div class="tat-kpi-label">Avg TAT</div>
+                            <div class="tat-kpi-icon">📊</div>
+                        </div>
+                        <div class="tat-kpi-value">—</div>
+                        <div class="tat-kpi-sub">Average TAT days</div>
+                    </div>
+
+                    <!-- TAT-1 -->
+                    <div id="within_tat_card" class="tat-kpi-card tat-kc-amber tat-anim" style="animation-delay:.13s">
+                        <div class="tat-kpi-top">
+                            <div class="tat-kpi-label">TAT-1 Close Jobs</div>
+                            <div class="tat-kpi-icon">🎯</div>
+                        </div>
+                        <div class="tat-kpi-value" id="tat1_val">—</div>
+                        <div class="tat-kpi-sub">— jobs</div>
+                        <div class="tat-kpi-sub" id="tat1_pct" style="display: none">— calls</div>
+                        <div class="tat-kpi-bar-bg" style="display: none">
+                            <div class="tat-kpi-bar-fill tat-kpi-bar-amber" id="tat1_bar" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAT-2 -->
+                    <div id="sla_breached_card" class="tat-kpi-card tat-kc-red tat-anim" style="animation-delay:.17s">
+                        <div class="tat-kpi-top">
+                            <div class="tat-kpi-label">TAT-2 Close Job</div>
+                            <div class="tat-kpi-icon">💾</div>
+                        </div>
+                        <div class="tat-kpi-value" id="tat2_val">—</div>
+                        <div class="tat-kpi-sub">— of jobs</div>
+                        <div class="tat-kpi-sub" id="tat2_pct" style="display: none">— of jobs</div>
+                        <div class="tat-kpi-bar-bg hidden">
+                            <div class="tat-kpi-bar-fill tat-kpi-bar-red" id="tat2_bar" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                    <!-- TAT-3 -->
+                    <div id="at_risk_card" class="tat-kpi-card tat-kc-green tat-anim" style="animation-delay:.21s">
+                        <div class="tat-kpi-top">
+                            <div class="tat-kpi-label">TAT-3 Close Job</div>
+                            <div class="tat-kpi-icon">📝</div>
+                        </div>
+                        <div class="tat-kpi-value" id="tat3_val">—</div>
+                        <div class="tat-kpi-sub">— of jobs</div>
+                        <div class="tat-kpi-sub hidden" id="tat3_pct">— of jobs</div>
+                        <div class="tat-kpi-bar-bg hidden">
+                            <div class="tat-kpi-bar-fill tat-kpi-bar-green" id="tat3_bar" style="width:0%"></div>
+                        </div>
+                    </div>
+
+                </div>';
+    }
+}
+
+class TrendAnalaysisChart implements LoadCard{
+    public function loadcard(){
+        echo '<div class="tat-row tat-col-1" style="margin-bottom:14px;">
+                    <div class="tat-card tat-anim" style="animation-delay:.25s">
+                        <div class="tat-ct">TAT Trend Analysis</div>
+                        <div class="tat-cs">Daily TAT trend over selected period — multiple series</div>
+                        <div id="tatTrendChart" style="height:280px;"></div>
+                    </div>
+                </div>';
+    }
+}
+
+class BucketCard implements LoadCard{
+    public function loadcard(){
+        echo '<div class="tat-row tat-col-21" style="margin-bottom:14px;">
+
+                    <!-- TAT-1 Bucket -->
+                    <div class="tat-card tat-anim" style="animation-delay:.33s">
+                        <div class="tat-ct">Calls by TAT-1 Bucket</div>
+                        <div class="tat-cs">TAT distribution across time ranges</div>
+                        <div class="tat-bucket-list" id="tatBucketWrap">
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=24 HRS</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#0aaa6e" data-count="0" data-pct="0%" data-color="#0aaa6e"></div></div>
+                                <div class="tat-bucket-val" style="color:#0aaa6e">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"><=36 HRS</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#2355f5" data-count="0" data-pct="0%" data-color="#2355f5"></div></div>
+                                <div class="tat-bucket-val" style="color:#2355f5">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"><=48 HRS</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#7c3aed" data-count="0" data-pct="0%" data-color="#7c3aed"></div></div>
+                                <div class="tat-bucket-val" style="color:#7c3aed">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=72 HRS</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#e6900a" data-count="0" data-pct="0%" data-color="#e6900a"></div></div>
+                                <div class="tat-bucket-val" style="color:#e6900a">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> >72HRS </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#e8344a" data-count="0" data-pct="0%" data-color="#e8344a"></div></div>
+                                <div class="tat-bucket-val" style="color:#e8344a">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAT-2 Bucket -->
+                    <div class="tat-card tat-anim" style="animation-delay:.36s">
+                        <div class="tat-ct">Calls by TAT-2 Bucket</div>
+                        <div class="tat-cs">TAT distribution across time ranges</div>
+                        <div class="tat-bucket-list" id="tatBucketWrap-2">
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=3 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#0aaa6e" data-count="0" data-pct="0%" data-color="#0aaa6e"></div></div>
+                                <div class="tat-bucket-val" style="color:#0aaa6e">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=5 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#2355f5" data-count="0" data-pct="0%" data-color="#2355f5"></div></div>
+                                <div class="tat-bucket-val" style="color:#2355f5">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"><=7 Days</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#7c3aed" data-count="0" data-pct="0%" data-color="#7c3aed"></div></div>
+                                <div class="tat-bucket-val" style="color:#7c3aed">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> >7 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#e6900a" data-count="0" data-pct="0%" data-color="#e6900a"></div></div>
+                                <div class="tat-bucket-val" style="color:#e6900a">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TAT-3 Bucket -->
+                    <div class="tat-card tat-anim" style="animation-delay:.39s">
+                        <div class="tat-ct">Calls by TAT-3 Bucket</div>
+                        <div class="tat-cs">TAT distribution across time ranges</div>
+                        <div class="tat-bucket-list" id="tatBucketWrap-3">
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=7 Days  </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#0aaa6e" data-count="0" data-pct="0%" data-color="#0aaa6e"></div></div>
+                                <div class="tat-bucket-val" style="color:#0aaa6e">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=15 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#2355f5" data-count="0" data-pct="0%" data-color="#2355f5"></div></div>
+                                <div class="tat-bucket-val" style="color:#2355f5">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> <=21 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#7c3aed" data-count="0" data-pct="0%" data-color="#7c3aed"></div></div>
+                                <div class="tat-bucket-val" style="color:#7c3aed">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"><=30 Days</div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#e6900a" data-count="0" data-pct="0%" data-color="#e6900a"></div></div>
+                                <div class="tat-bucket-val" style="color:#e6900a">—</div>
+                            </div>
+                            <div class="tat-bucket-row">
+                                <div class="tat-bucket-label"> >30 Days </div>
+                                <div class="tat-bucket-bg"><div class="tat-bucket-fill" style="width:0%;background:#e8344a" data-count="0" data-pct="0%" data-color="#e8344a"></div></div>
+                                <div class="tat-bucket-val" style="color:#e8344a">—</div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>';
+    }
+}
+
+class ZoneandAvgTat implements LoadCard{
+    public function  loadcard(){
+        echo '<div class="tat-row tat-col-2" style="margin-bottom:14px;">
+
+                    <!-- Avg TAT by Product -->
+                    <div class="tat-card tat-anim" style="animation-delay:.41s">
+                        <div class="tat-ct">Avg TAT by Product</div>
+                        <div class="tat-cs">Product-wise turnaround comparison</div>
+                        <table class="tat-tbl" id="tat_table">
+                            <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Avg TAT</th>
+                                <th>Min</th>
+                                <th>Max</th>
+                                <th>Status</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:20px;">Apply filters to load data</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- Zone Wise TAT -->
+                    <div class="tat-card tat-anim" style="animation-delay:.45s">
+                        <div class="tat-ct">Zone Wise TAT</div>
+                        <div class="tat-cs">Avg TAT breach % per zone</div>
+                        <div class="tat-zone-list" id="tat-zone-list"></div>
+                    </div>
+
+                </div>';
+    }
+}
+class FooterUiRendering implements  LoadCard{
+    public function loadcard(){
+        echo '<div class="tat-footer">
+                    <div class="tat-fleg">
+                        <div class="tat-fleg-item"><div class="tat-fleg-dot" style="background:var(--green)"></div>Within TAT (&lt;24 HRS)</div>
+                        <div class="tat-fleg-item"><div class="tat-fleg-dot" style="background:var(--amber)"></div>At Risk (24–72 HRS)</div>
+                        <div class="tat-fleg-item"><div class="tat-fleg-dot" style="background:var(--red)"></div>Breached (&gt;72 HRS)</div>
+                    </div>
+                    <div>Updated: '.date('d M Y, h:i A').'</div>
+                </div>';
+    }
+}
+class LoaderCardFactory{
+    public static function cardfactory($value=0){
+        if($value===1){
+            return new KPIsCardLoader();
+        }
+        if($value===2){
+            return new TrendAnalaysisChart();
+        }
+        if($value===3){
+            return new ZoneandAvgTat();
+        }
+        if($value===4){
+            return new FooterUiRendering();
+        }
+        return 0;
+    }
+}
+
 class UIRender {
-    public static function render($order=0){
-        if($order===1){
-            // card 1 render here
+    public static function render($orders=[1,2,3,4]){
+        echo '<section class="hidden" id="dashboard_home">';
+        if(!is_array($orders)){
+            return;
         }
-        else if ($order===2){
-            // Calls by Aging Bucket
+        foreach ($orders as $order) {
+            LoaderCardFactory::cardfactory($order)->loadcard();
         }
-        else if ($order===3){
-            // TAT Status Split
-        }
+        echo '<section>';
     }
 }
 
