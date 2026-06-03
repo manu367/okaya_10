@@ -1,0 +1,359 @@
+Atomic Counter
+Problem
+
+100 threads ek counter increment karein 1000 times.
+
+Goal
+
+Final answer always:
+
+100000
+Use
+AtomicInteger
+Q2. Login Attempt Tracker
+Problem
+
+Ek user ke failed login attempts count karo safely.
+
+Requirement
+
+Multiple threads same user ko update kar sakte.
+
+Use
+AtomicInteger
+Q3. One-Time Initialization
+Problem
+
+Application config sirf ek baar initialize hona chahiye.
+
+Use
+AtomicBoolean
+Q4. Unique ID Generator
+Problem
+
+Har request ko unique sequential ID do.
+
+Use
+AtomicLong
+MEDIUM LEVEL
+Q5. Thread-safe Bank Balance
+Problem
+
+Multiple threads:
+
+deposit
+withdraw
+
+perform karein.
+
+Use
+AtomicInteger
+CAS (compareAndSet)
+Q6. Inventory System
+Problem
+
+Stock quantity atomically update karo.
+
+Condition:
+
+stock negative nahi hona chahiye
+Use
+compareAndSet
+Q7. Atomic Reference Swap
+Problem
+
+Current configuration object ko runtime me replace karo without locking.
+
+Use
+AtomicReference
+Q8. Concurrent Voting System
+Problem
+
+Votes safely count karo for multiple candidates.
+
+Use
+AtomicIntegerArray
+HARD LEVEL
+Q9. ABA Problem Demo
+Problem
+
+ABA issue create karo and fix karo.
+
+Use
+AtomicStampedReference
+Q10. Lock-Free Stack
+Problem
+
+Stack implement karo without synchronized.
+
+Use
+AtomicReference
+Q11. Concurrent Cache Refresh
+Problem
+
+Cache object atomically replace karo while reads continue.
+
+Use
+AtomicReference
+2. Lock / ReentrantLock Problems
+EASY LEVEL
+Q12. Thread-safe Counter using Lock
+Problem
+
+Counter increment karo using:
+
+ReentrantLock
+Q13. Ticket Booking System
+Problem
+
+10 tickets hain.
+
+Multiple users simultaneously book karein.
+
+Overbooking nahi honi chahiye.
+
+Use
+ReentrantLock
+Q14. ATM Withdrawal
+Problem
+
+Same account pe multiple withdrawals.
+
+Balance negative nahi hona chahiye.
+
+MEDIUM LEVEL
+Q15. Producer Consumer Problem
+Problem
+
+Producer items add kare.
+Consumer remove kare.
+
+Use
+Lock
+Condition
+Q16. Printer Queue Manager
+Problem
+
+Ek hi printer hai.
+
+Multiple print requests synchronize karo.
+
+Use
+ReentrantLock
+Q17. Dining Philosophers
+
+Classic concurrency problem.
+
+Learn
+Deadlock
+Lock ordering
+Q18. Rate Limiter
+Problem
+
+Ek user per second fixed requests bhej sakta.
+
+Use
+Lock
+Condition
+HARD LEVEL
+Q19. Custom Blocking Queue
+Problem
+
+Khud ka:
+
+BlockingQueue
+
+banao.
+
+Use
+ReentrantLock
+Condition
+Q20. Deadlock Detection Demo
+Problem
+
+Intentional deadlock create karo.
+
+Phir avoid karo.
+
+Q21. Thread-safe LRU Cache
+Problem
+
+Concurrent cache with eviction.
+
+Use
+ReentrantLock
+3. ReadWriteLock Problems
+EASY
+Q22. Library Management System
+Problem
+Many readers
+Few writers
+Use
+ReentrantReadWriteLock
+Q23. Configuration Store
+Problem
+
+Config frequently read hota.
+Rarely updated.
+
+MEDIUM
+Q24. In-Memory Database
+Problem
+
+Concurrent:
+
+reads
+writes
+
+manage karo.
+
+Q25. Student Record System
+Problem
+
+Many students read.
+Admin updates.
+
+HARD
+Q26. Concurrent Search Engine Index
+Problem
+
+Thousands reads.
+Occasional indexing updates.
+
+4. StampedLock Problems
+MEDIUM
+Q27. GPS Coordinate Reader
+Problem
+
+Coordinates mostly read hote.
+
+Rarely update.
+
+Use
+optimistic read
+Q28. Weather Dashboard
+Problem
+
+Real-time sensor data reading.
+
+HARD
+Q29. Stock Market Price Engine
+Problem
+
+Millions reads/sec.
+
+Few writes.
+
+Use
+StampedLock
+Q30. Analytics Dashboard
+Problem
+
+Fast reads with minimal blocking.
+
+5. LockSupport Problems
+MEDIUM
+Q31. Custom Thread Pauser
+Problem
+
+Thread ko manually:
+
+pause
+resume
+
+karna.
+
+Use
+park/unpark
+HARD
+Q32. Mini Thread Scheduler
+Problem
+
+Basic scheduler implement karo.
+
+6. Mixed Real-World Problems 🔥
+Q33. Uber Ride Matching
+Concepts
+locks
+conditions
+atomic counters
+Q34. Food Delivery App
+Features
+order queue
+delivery assignment
+status tracking
+Q35. Multiplayer Game Server
+Concepts
+player state sync
+atomic health updates
+read/write world state
+Q36. Banking Transaction Engine
+Concepts
+deadlock prevention
+account locking
+atomic balances
+Q37. URL Shortener
+Concepts
+AtomicLong for IDs
+concurrent cache
+read/write locks
+Q38. Chat Application
+Concepts
+message queues
+thread-safe rooms
+concurrent users
+Q39. E-Commerce Inventory System
+Concepts
+stock reservation
+optimistic locking
+concurrent checkout
+Q40. Concurrent Web Crawler
+Concepts
+thread pool
+atomic visited tracking
+blocking queue
+BEST PRACTICE ORDER 🌙
+
+Is order me solve kar:
+
+Phase 1
+
+Learn basics:
+
+AtomicInteger
+synchronized
+ReentrantLock
+
+Problems:
+
+Q1 → Q14
+Phase 2
+
+Coordination:
+
+Condition
+Producer Consumer
+
+Problems:
+
+Q15 → Q21
+Phase 3
+
+Advanced reads:
+
+ReadWriteLock
+StampedLock
+
+Problems:
+
+Q22 → Q30
+Phase 4
+
+Low-level mastery:
+
+LockSupport
+lock-free structures
+
+Problems:
+
+Q31 → Q40

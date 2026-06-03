@@ -1,0 +1,34 @@
+**java.util.concurrent.atomic**
+
+Inka main kaam hai thread-safe operations bina heavy synchronized lock lagaye.
+Matlab multiple threads ek hi data ko update karein aur data corrupt na ho.
+
+“Atomic” = operation ya to pura hoga ya bilkul nahi hoga.
+Beech me koi thread ghus ke value kharab nahi karega.
+
+
+Classes
+
+AtomicBoolean  = Boolean ko thread-safe banana.
+
+AtomicInteger  = Thread-safe integer counter.
+AtomicIntergerArray = Array ke individual elements ko thread-safe banana
+
+AtomicLong       = Same as AtomicInteger but for huge numbers.
+AtomicLongArray  = Array ke individual elements ko thread-safe banana
+
+AtomicReference = Object reference ko atomically replace karna.
+AtomicReferenceArray = Array ke individual elements ko thread-safe banana
+
+AtomicStampedReference = Reference + integer version/stamp. Ye bahut important hai.
+
+DoubleAdder = Same as LongAdder but for double values.
+ DoubleAccumulator
+
+LongAdder = Ye modern high-performance counter hai. Heavy concurrent counting
+AtomicLong me sab threads ek hi variable pe fight karte hain.
+LongAdder internally multiple counters use karta hai.
+Traffic divide ho jata hai.
+
+LongAccumulator = Custom operation with long.
+

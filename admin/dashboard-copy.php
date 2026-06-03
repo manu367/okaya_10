@@ -1057,12 +1057,7 @@ include("../includes/connection_close.php");
 </div>
 
 <script>
-    function MANU(msg){
-        console.error(msg);
-    }
-    (function(){
-        throw new MANU("this is worng data here");
-    })();
+
 
     async function fetchBarJobData(category){
         category = category.replace(/\s*days?/i, '').trim();
@@ -1890,6 +1885,9 @@ include("../includes/connection_close.php");
         }, 3500);
     }
 </script>
-
+<!--IB ACIO Tech-->
+<!--SEBI IT-->
+<!--IBPS SO IT-->
+<!--SBI SO IT-->
 </body>
 </html>

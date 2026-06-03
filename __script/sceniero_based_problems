@@ -1,0 +1,408 @@
+1. E-Commerce Flash Sale
+Ek e-commerce platform par flash sale chal rahi hai.
+Ek product ka stock sirf 10 units hai.
+10,000 users same time “Buy Now” button press karte hain.
+System ko ensure karna hai:
+kisi bhi condition me stock negative na ho
+ek item do users ko double allocate na ho
+successful orders hi payment stage me jaayein
+high traffic me performance degrade na ho
+
+2. Banking Transaction Engine
+Ek banking system me multiple users same time:
+deposit
+withdraw
+fund transfer
+kar rahe hain.
+Agar ek user Account-A se Account-B me ₹5000 transfer kar raha hai aur same time doosra thread bhi same accounts access kar raha hai, to:
+balance inconsistent nahi hona chahiye
+deadlock avoid hona chahiye
+partial transfer nahi hona chahiye
+
+3. Online Movie Ticket Booking
+Ek cinema hall me 2 seats bachi hain.
+Thousands users simultaneously booking request bhej rahe hain.
+System ko guarantee deni hai:
+same seat multiple users ko allocate na ho
+payment success hone ke baad hi seat confirm ho
+seat locking timeout support kare
+booking fast ho under heavy traffic
+
+4. Ride Sharing Platform
+Ride-sharing app me:
+drivers online/offline ho rahe hain
+users continuously ride request bhej rahe hain
+Ek driver ko ek hi time par sirf ek ride assign honi chahiye.
+Nearest available driver choose karna hai without inconsistent assignments.
+
+5. Multiplayer Battle Game
+Ek multiplayer online game me 500 players ek battlefield me fight kar rahe hain.
+Players simultaneously:
+move shoot heal collect rewards
+kar rahe hain.
+System ko ensure karna hai:
+player health incorrect na ho
+inventory corruption na ho
+game state fast read ho sake
+server lag minimum ho
+
+6. Live Stock Market System
+Ek stock trading platform par millions transactions per second aa rahe hain.
+Users: stocks buy/sell kar rahe hain
+live prices dekh rahe hain
+analytics engine continuously updates kar raha hai
+System requirements:
+ultra-low latency
+incorrect stock quantity nahi honi chahiye
+stale data avoid ho
+reads extremely fast honi chahiye
+
+7. Food Delivery Application
+Food delivery platform me:
+customers order place karte hain
+restaurants orders prepare karte hain
+delivery agents pickup karte hain
+Order lifecycle:
+PLACED → PREPARING → PICKED → DELIVERED
+Same order ka status multiple services update kar sakti hain simultaneously.
+System ko status corruption avoid karna hai.
+
+8. Smart Traffic Control System
+City ke smart traffic signals sensors se continuously data receive karte hain.
+Traffic controller:
+vehicle count read karta hai
+signal timing update karta hai
+Multiple sensors ek hi intersection ka data simultaneously update kar sakte hain.
+System ko:
+stale reads avoid karni hain
+real-time performance maintain karni hai
+
+9. Distributed Chat Application
+Ek chat application me:
+thousands users online hain
+group chats continuously active hain
+messages parallel receive ho rahe hain
+Requirements:
+message order maintain ho
+unread count accurate ho
+online user count consistent ho
+concurrent room access safe ho
+
+10. Airline Reservation System
+Ek flight me last 5 seats available hain.
+Millions users simultaneously booking attempt kar rahe hain.
+System ko ensure karna hai:
+overbooking na ho
+cancellation ke baad seats safely release ho
+waiting-list users correctly upgrade ho
+booking confirmation atomic ho
+
+11. Hospital Emergency Management
+Hospital emergency system me:
+doctors patient records update karte hain
+nurses vitals update karti hain
+billing system parallel access karta hai
+Critical patient data:
+corrupted nahi hona chahiye
+simultaneous reads support kare
+emergency updates highest priority pe execute ho
+
+12. Video Streaming Platform
+Video streaming platform par:
+millions users videos watch kar rahe hain
+recommendation engine metadata update kar raha hai
+cache continuously refresh ho raha hai
+System ko:
+high-speed reads support karni hain
+metadata consistency maintain karni hai
+configuration updates safely propagate karni hain
+
+13. Warehouse Inventory Management
+Warehouse system me:
+products continuously add/remove ho rahe hain
+multiple workers same inventory access kar rahe hain
+automated bots stock update kar rahe hain
+Requirements:
+inventory mismatch avoid ho
+concurrent updates safe ho
+low-latency stock lookup possible ho
+
+14. Real-Time Analytics Dashboard
+Analytics dashboard continuously:
+user events collect karta hai
+counters update karta hai
+live graphs render karta hai
+Millions reads per second ho sakte hain while updates continuously chal rahe hain.
+System ko:
+read performance optimize karni hai
+counters accurate rakhne hain
+locking overhead minimize karna hai
+
+15. File Download Manager
+Download manager me users:
+pause resume cancel
+operations perform kar sakte hain while downloads parallel chal rahe hain.
+Requirements:
+download state corruption avoid ho
+paused threads safely resume ho
+multiple file downloads efficiently coordinate ho
+
+
+16. Online Examination System
+Ek online exam platform par lakhon students simultaneously exam de rahe hain.
+System continuously:
+answers auto-save karta hai
+timer update karta hai
+submission status maintain karta hai
+Requirements:
+ek student ka answer overwrite na ho
+duplicate submission avoid ho
+exam timeout accurately trigger ho
+server overload ke bawajood consistency maintain ho
+
+17. Crypto Wallet System
+Crypto wallet application me users:
+coins transfer karte hain
+balances check karte hain
+transactions verify karte hain
+Same wallet ko multiple devices se access kiya ja sakta hai.
+Requirements:
+double spending avoid ho
+transaction history consistent ho
+balances negative na ho
+transfers atomic hone chahiye
+
+18. Railway Reservation System
+Tatkal booking start hote hi millions requests aati hain.
+System:
+seats allocate karta hai
+RAC/waiting manage karta hai
+cancellations process karta hai
+Requirements:
+same berth double assign na ho
+waiting list correctly move ho
+cancellations safely reflect ho
+booking fairness maintain ho
+
+19. Digital Payment Gateway
+Payment gateway simultaneously:
+payment requests receive karta hai
+fraud checks perform karta hai
+bank confirmations handle karta hai
+Requirements:
+duplicate payment processing avoid ho
+transaction status race condition me incorrect na ho
+timeout handling safe ho
+retries idempotent hone chahiye
+
+20. Cloud File Storage System
+Cloud storage platform me users:
+files upload/download karte hain
+permissions modify karte hain
+folders share karte hain
+Requirements:
+same file concurrent modification safely handle ho
+file metadata consistent rahe
+reads fast ho
+partial uploads corruption na karein
+
+21. Real-Time Auction Platform
+Live auction me thousands bidders simultaneously bids place kar rahe hain.
+System ko:
+highest bid accurately maintain karni hai
+same timestamp bids safely resolve karni hain
+auction close hone ke baad further bids reject karni hain
+real-time updates instantly show karne hain
+
+22. Social Media Feed System
+Social media app me:
+users posts create karte hain
+likes/comments continuously aa rahe hain
+feed ranking engine updates kar raha hai
+Requirements:
+like counts accurate ho
+feed stale na ho
+concurrent feed generation fast ho
+notification duplication avoid ho
+
+23. Smart Home Automation System
+Smart home system me:
+sensors continuously updates bhejte hain
+users mobile app se commands dete hain
+automation rules background me execute hote hain
+Requirements:
+conflicting commands safely resolve ho
+device state synchronized rahe
+real-time responsiveness maintain ho
+
+24. Online Gaming Matchmaking
+Gaming platform players ko skill/rank basis par match karta hai.
+Thousands players simultaneously queue join/leave kar rahe hain.
+Requirements:
+same player multiple matches me assign na ho
+matchmaking queues consistent rahein
+low waiting time maintain ho
+disconnect handling safe ho
+
+25. IoT Sensor Monitoring System
+Factory me thousands IoT sensors continuously temperature, pressure aur machine health data bhej rahe hain.
+Monitoring system:
+live dashboards update karta hai
+alerts generate karta hai
+reports calculate karta hai
+Requirements:
+concurrent sensor updates safe ho
+reads highly optimized ho
+alert duplication avoid ho
+
+26. Hotel Room Booking Platform
+Hotel booking system me:
+users rooms search karte hain
+reservations hold karte hain
+payments process karte hain
+Requirements:
+same room double-book na ho
+temporary reservation expiry safely handle ho
+concurrent booking requests correctly process ho
+
+27. Distributed Cache System
+Microservices architecture me multiple services shared distributed cache access karte hain.
+Services:
+cache read/write karte hain
+cache invalidation perform karte hain
+hot keys frequently update karte hain
+Requirements:
+stale cache avoid ho
+race conditions prevent ho
+high read throughput maintain ho
+
+28. Real-Time Collaboration Editor
+Google Docs jaisa collaborative editor me multiple users same document simultaneously edit kar rahe hain.
+Requirements:
+edits lost na ho
+cursor positions synchronize rahein
+document corruption avoid ho
+low-latency collaboration maintain ho
+
+29. Logistics & Parcel Tracking System
+Courier company system me:
+packages scan ho rahe hain
+delivery status update ho raha hai
+warehouses transfers process kar rahe hain
+Requirements:
+package state consistent ho
+duplicate scans safely handle ho
+live tracking accurate ho
+30. AI Model Training Pipeline
+Distributed AI training system me:
+multiple worker nodes gradients calculate karte hain
+shared model parameters update hote hain
+checkpoints save hote hain
+Requirements:
+parameter corruption avoid ho
+concurrent updates synchronize ho
+training throughput maximize ho
+
+31. Drone Fleet Management System
+Delivery drones continuously:
+location updates bhej rahe hain
+battery status update kar rahe hain
+delivery assignments receive kar rahe hain
+Requirements:
+same drone multiple deliveries me assign na ho
+live map reads fast ho
+emergency commands highest priority pe execute ho
+
+32. Video Conferencing Platform
+Video meeting platform me:
+participants join/leave karte hain
+audio/video streams synchronize hoti hain
+live chat continuously active rehta hai
+Requirements:
+participant state accurate ho
+concurrent room updates safe ho
+latency minimum ho
+
+33. Fraud Detection Engine
+Banking fraud detection engine real-time transactions analyze karta hai.
+Multiple threads:
+transaction stream process karte hain
+risk scores update karte hain
+suspicious accounts flag karte hain
+Requirements:
+duplicate fraud alerts avoid ho
+shared fraud scores consistent ho
+high-speed processing maintain ho
+
+34. Ride Pooling System
+Ride pooling app multiple passengers ko same route me combine karta hai.
+System continuously:
+drivers assign karta hai
+seats availability update karta hai
+routes optimize karta hai
+Requirements:
+seat over-allocation avoid ho
+concurrent ride modifications safe ho
+live route reads optimized ho
+
+35. Smart Electricity Grid
+Power grid system continuously:
+electricity usage monitor karta hai
+load balancing perform karta hai
+fault alerts generate karta hai
+Requirements:
+concurrent sensor data safely aggregate ho
+critical updates delayed na ho
+real-time monitoring consistent ho
+
+36. Hospital Bed Allocation System
+Emergency situations me hospital system ICU/general beds allocate karta hai.
+Multiple staff simultaneously:
+bed assign/release kar rahe hain
+patient priority update kar rahe hain
+Requirements:
+same bed double allocate na ho
+emergency patients priority correctly handle ho
+live availability accurate ho
+
+37. Cryptocurrency Exchange
+Crypto exchange platform me:
+buy/sell orders continuously aa rahe hain
+order books update ho rahe hain
+balances lock/unlock ho rahe hain
+Requirements:
+order matching atomic ho
+balance inconsistency avoid ho
+ultra-low latency maintain ho
+
+38. CDN Cache Synchronization
+Global CDN system me:
+edge servers cache serve karte hain
+origin servers updates push karte hain
+Requirements:
+stale content minimize ho
+concurrent invalidation safe ho
+reads extremely fast ho
+
+
+39. Online Whiteboard Application
+Collaborative whiteboard me users:
+draw karte hain
+erase karte hain
+objects move karte hain
+simultaneously.
+Requirements:
+drawing state corrupt na ho
+concurrent edits synchronize ho
+rendering smooth rahe
+
+
+40. Autonomous Vehicle Coordination System
+Self-driving vehicles continuously:
+sensor data share karte hain
+traffic decisions exchange karte hain
+route coordination perform karte hain
+Requirements:
+shared traffic state consistent ho
+stale reads dangerous decisions na le aayein
+critical updates immediately visible ho

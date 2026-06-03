@@ -1,0 +1,41 @@
+1.Task Execution Interfaces
+Executor: Executors ThreadPoolExecutor ForkJoinPool ScheduledThreadPoolExecuto
+ExecutorService : ThreadPoolExecutor , ForkJoinPool
+ScheduledExecutorService : ScheduledThreadPoolExecutor
+ThreadFactory
+RejectedExecutionHandler
+
+
+2. Future & Async Result Interfaces : Ye interfaces asynchronous computation ka heart hain.
+Future<V> : FutureTask , ForkJoinTask , CompletableFuture
+RunnableFuture<V> : FutureTask
+RunnableScheduledFuture<V> :
+ScheduledFuture<V>
+Callable<V>
+
+
+3. CompletableFuture & Reactive Async Flow (Modern async programming)
+CompletionStage<T> : CompletableFuture
+CompletableFuture.AsynchronousCompletionTask
+CompletionService<V> : ExecutorCompletionService
+
+
+4. Queue Based Concurrent Data Structures
+BlockingDeque<E>
+BlockingQueue<E>
+TransferQueue<E>
+
+5. Concurrent COllection
+ConcurrentMap<K,V>
+ConcurrentNavigableMap<K,V>
+
+
+6. Reactive Stream Interface
+Flow.Processor<T,R>
+Flow.Publisher<T>
+Flow.Subscriber<T>
+Flow.Subscription
+
+7. ForkJoin Framwework
+ForkJoinPool.ForkJoinWorkerThreadFactory
+ForkJoinPool.ManagedBlocker
