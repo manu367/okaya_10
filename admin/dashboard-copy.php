@@ -27,45 +27,6 @@ $pagination='dashboard-pendingcall-data-grid.php';
     <script type="text/javascript" src="../js/jquery.validate.js"></script>
     <script type="text/javascript" src="../js/common_js.js"></script>
     <style>
-        /* Background overlay */
-        .modal{
-            display: none;
-            position: fixed;
-            inset: 0;
-            width: 100%;
-            height: 100vh;
-            background: rgba(0,0,0,0.7);
-
-            justify-content: center;
-            align-items: center;
-
-            z-index: 999;
-            box-sizing: border-box;
-        }
-
-        /* Large modal box */
-        .modal-content{
-            width: 90%;
-            max-width: 1100px;
-            min-height: 500px;
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            overflow: hidden;
-        }
-
-        .modal-content h2{
-            margin-top: 0;
-            font-size: 32px;
-        }
-
-        .modal-content p{
-            font-size: 18px;
-            line-height: 1.6;
-        }
-    </style>
-    <style>
         /* ===== Modal Table Wrapper ===== */
         .table-responsive-custom{
             width: 100%;
@@ -570,6 +531,122 @@ $pagination='dashboard-pendingcall-data-grid.php';
             transform: translateX(0);
         }
     </style>
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100vh;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: flex-start;      /* center ki jagah flex-start */
+            overflow-y: auto;             /* modal itself scroll karega */
+            z-index: 999;
+            box-sizing: border-box;
+            padding: 30px 16px;           /* upar neeche breathing room */
+        }
+        /* Modal box */
+        .modal-content {
+            width: 90%;
+            max-width: 1100px;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+            box-sizing: border-box;
+            overflow: hidden;             /* andar overflow nahi hoga */
+        }
+
+        .modal-content h2,
+        .modal-content h3 {
+            margin-top: 0;
+            font-size: 22px;
+            margin-bottom: 16px;
+        }
+
+        /* DataTables modal fix */
+        .modal-content .dataTables_wrapper {
+            padding: 0;
+        }
+        .modal-content .dataTables_filter {
+            text-align: right;
+            margin-bottom: 10px;
+        }
+        .modal-content .dataTables_filter input {
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 6px 12px;
+            font-size: 13px;
+            outline: none;
+            margin-left: 6px;
+        }
+        .modal-content .dataTables_info {
+            font-size: 12px;
+            color: #6b7280;
+            padding-top: 8px;
+        }
+        .modal-content .dataTables_paginate {
+            padding-top: 8px;
+        }
+        .modal-content .dataTables_paginate .paginate_button {
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid #e5e7eb !important;
+            background: #fff !important;
+            font-size: 13px;
+            color: #374151 !important;
+            margin: 0 2px;
+            cursor: pointer;
+        }
+        .modal-content .dataTables_paginate .paginate_button.current {
+            background: #2563eb !important;
+            color: #fff !important;
+            border-color: #2563eb !important;
+            font-weight: 600;
+        }
+        .modal-content .dataTables_paginate .paginate_button:hover:not(.current) {
+            background: #eff6ff !important;
+            color: #2563eb !important;
+            border-color: #93c5fd !important;
+        }
+        .modal-content .dataTables_paginate .paginate_button.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .dt-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        /* Table wrapper — yahi asli fix hai */
+        .table-responsive-custom {
+            width: 100%;
+            overflow-x: auto;
+            border-radius: 12px;
+        }
+
+        /* DataTables wrapper fix */
+        .modal-content .dataTables_wrapper {
+            width: 100%;
+            overflow-x: auto;
+        }
+
+        /* Pagination bottom row */
+        .modal-content .dt-bottom {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+    </style>
+    <link rel="stylesheet" href="../css/jquery.dataTables.min.css">
+    <script type="text/javascript" src="../js/jquery.dataTables.min.js"></script>
 </head>
 <body>
 
@@ -1057,8 +1134,6 @@ include("../includes/connection_close.php");
 </div>
 
 <script>
-
-
     async function fetchBarJobData(category){
         category = category.replace(/\s*days?/i, '').trim();
         const response=await fetch(`../pagination/<?=$pagination?>?bar_bucket=${category}`)
@@ -1080,11 +1155,15 @@ include("../includes/connection_close.php");
         const data=await response.json();
         return data;
     }
-
     async function rendeModalTable(data) {
-        console.log(data);
         const tableBody = document.querySelector("#_modal_table_ tbody");
         tableBody.innerHTML = "";
+
+        // Pehle se initialized DataTable destroy karo
+        if ($.fn.DataTable.isDataTable("#_modal_table_")) {
+            $("#_modal_table_").DataTable().destroy();
+        }
+
         if (!data || data.length === 0) {
             tableBody.innerHTML = `
             <tr>
@@ -1101,48 +1180,39 @@ include("../includes/connection_close.php");
             rows += `
             <tr>
                 <td>${index + 1}</td>
+                <td><span class="table-text" title="${item.job_no}">${item.job_no}</span></td>
+                <td><span class="table-text" title="${item.contact_no}">${item.contact_no}</span></td>
+                <td><span class="table-text" title="${item.customer_name}">${item.customer_name}</span></td>
+                <td><span class="table-text" title="${item.product_name}">${item.product_name}</span></td>
                 <td>
-                    <span class="table-text" title="${item.job_no}">
-                        ${item.job_no}
-                    </span>
-                </td>
-
-                <td>
-                    <span class="table-text" title="${item.contact_no}">
-                        ${item.contact_no}
-                    </span>
-                </td>
-
-                <td>
-                    <span class="table-text" title="${item.customer_name}">
-                        ${item.customer_name}
-                    </span>
-                </td>
-
-                <td>
-                    <span class="table-text" title="${item.product_name}">
-                        ${item.product_name}
-                    </span>
-                </td>
-
-                <td>
-                    <a
-                        href="job_view.php?refid=${item.job_no}"
-                        class="btn-view"
-                        target="_blank"
-                    >
+                    <a href="job_view.php?refid=${item.job_no}" class="btn-view" target="_blank">
                         View
                     </a>
                 </td>
-
             </tr>
         `;
         });
 
         tableBody.innerHTML = rows;
+
+        // DataTable initialize
+        $("#_modal_table_").DataTable({
+            pageLength: 10,
+            lengthChange: false,
+            ordering: false,
+            searching: true,
+            dom: '<"dt-top"f>rt<"dt-bottom"ip>',
+            language: {
+                search: "",
+                searchPlaceholder: "Search...",
+                paginate: {
+                    previous: "‹",
+                    next: "›"
+                },
+                info: "Showing _START_–_END_ of _TOTAL_",
+            }
+        });
     }
-
-
 
     async function modalOpen(self, category, title = "Unknown", bucket = "") {
         const modal = document.getElementById("myModal");
@@ -1192,11 +1262,9 @@ include("../includes/connection_close.php");
             self.hideLoader();
         }
     }
-
     function modalClose(){
         document.getElementById("myModal").style.display = "none";
     }
-
     window.onclick = function(event){
         const modal = document.getElementById("myModal");
 
@@ -1205,24 +1273,18 @@ include("../includes/connection_close.php");
             return;
         }
     }
-
-
     Highcharts.setOptions({
         chart: { style: { fontFamily: "'DM Sans', sans-serif" } },
         credits: { enabled: false },
         title: { text: '' },
         tooltip: { borderRadius: 8, shadow: false }
     });
-
-
     async function getAllDataFetchFromServer() {
         const response = await fetch(
             '../pagination/<?=$pagination?>?form_input_data'
         );
         return await response.json();
     }
-
-
     function DashboardCreations() {
         this.loader = document.getElementById("dashboardLoader");
         this.form = document.getElementById("dashboard_form");
@@ -1257,7 +1319,6 @@ include("../includes/connection_close.php");
         this.fillStatus();
         this.bindEvent();
     }
-
     DashboardCreations.prototype.createOption = function (selectBox, value, text){
         let option = document.createElement("option");
         option.value = value??'';
@@ -1270,14 +1331,12 @@ include("../includes/connection_close.php");
         option.textContent = `${text} days`;
         selectBox.appendChild(option);
     }
-
     DashboardCreations.prototype.fillDateRange = function () {
         this.dataRange.innerHTML = '<option value="">Select Date Range</option>';
         this.allData.data_range.forEach((item) => {
             this.createOptionForDateRange(this.dataRange, item, item);
         });
     }
-
     DashboardCreations.prototype.fillZone = function () {
         this.zone.innerHTML = '<option value="">Select Zone</option>';
         this.allData.zone.forEach((item) => {
@@ -1288,7 +1347,6 @@ include("../includes/connection_close.php");
             );
         });
     }
-
     DashboardCreations.prototype.fillState = function (zoneid) {
         this.state.innerHTML = '<option value="">Select State</option>';
 
@@ -1303,7 +1361,6 @@ include("../includes/connection_close.php");
             );
         });
     }
-
     DashboardCreations.prototype.fillbsi = async function (state) {
         this.showLoader();
         try {
@@ -1325,7 +1382,6 @@ include("../includes/connection_close.php");
             this.hideLoader();
         }
     };
-
     DashboardCreations.prototype.fillProducts = function () {
         this.product.innerHTML = '<option value="">Select Product</option>';
         this.allData.poduct.forEach((item) => {
@@ -1336,7 +1392,6 @@ include("../includes/connection_close.php");
             );
         });
     }
-
     DashboardCreations.prototype.fillEngineerType = function () {
         this.enginertype.innerHTML = '<option value="">Select Engineer Type</option>';
         this.allData.enginnertype.forEach((item) => {
@@ -1347,7 +1402,6 @@ include("../includes/connection_close.php");
             );
         });
     }
-
     DashboardCreations.prototype.fillStatus = function () {
         this.status.innerHTML =
             '<option value="">Select Status</option>';
@@ -1359,7 +1413,6 @@ include("../includes/connection_close.php");
             );
         });
     }
-
     DashboardCreations.prototype.bindEvent = function () {
         let self = this;
         this.zone.addEventListener("change", function (e) {
@@ -1384,7 +1437,6 @@ include("../includes/connection_close.php");
             self.resetAll();
         });
     }
-
     DashboardCreations.prototype.validateAll = function () {
         // if (this.dataRange.value == "") {
         //     alert("Please Select Date Range");
@@ -1394,14 +1446,12 @@ include("../includes/connection_close.php");
         //     alert("Please Select Zone");
         //     return false;
         // }
-
         // if (this.state.value == "") {
         //     alert("Please Select State");
         //     return false;
         // }
         return true;
     }
-
     DashboardCreations.prototype.formSubmit = async function () {
 
         if (!this.validateAll()) {
@@ -1647,7 +1697,6 @@ include("../includes/connection_close.php");
             this.hideLoader();
         }
     }
-
     DashboardCreations.prototype.stackData = function(stackdata){
 
         const oldest_pending_call_days =
@@ -1702,7 +1751,6 @@ include("../includes/connection_close.php");
         top_product_days.innerText =
             stackdata.top_product.days || "0days";
     };
-
     DashboardCreations.prototype.resetAll = function () {
         this.form.reset();
         this.state.innerHTML = '<option value="">Select State</option>';
@@ -1711,7 +1759,6 @@ include("../includes/connection_close.php");
     DashboardCreations.prototype.cardSetValue=function(){}
     DashboardCreations.prototype.columncartSetup=function(){}
     DashboardCreations.prototype.piechartSetup=function(){}
-
     document.addEventListener("DOMContentLoaded", async function () {
         let dashboard = new DashboardCreations();
         await dashboard.init();
@@ -1800,7 +1847,6 @@ include("../includes/connection_close.php");
             }
         });
     };
-
     DashboardCreations.prototype.pendingcallByStatus = function(element, data) {
 
         if (!data || !data.length) return;
@@ -1884,10 +1930,8 @@ include("../includes/connection_close.php");
 
         }, 3500);
     }
+
+
 </script>
-<!--IB ACIO Tech-->
-<!--SEBI IT-->
-<!--IBPS SO IT-->
-<!--SBI SO IT-->
 </body>
 </html>

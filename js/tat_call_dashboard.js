@@ -15,6 +15,7 @@
     function collNav(e){
     const home=document.getElementById("home");//style="width: 100%;"
     const nav=document.getElementById("hide_nav_");
+    e.stopImmediatePropagation();
     nav.classList.toggle('hide_nav_');
     home.classList.toggle("full-width");
     setTimeout(function () {
@@ -368,9 +369,9 @@
     var self = this;
 
     if (!navigator.onLine) {
-    this.showMessage('No internet connection detected', 'error');
-    return;
-}
+        this.showMessage('No internet connection detected', 'error');
+        return;
+    }
 
     this.hideDashboard();
     this.showLoader();
@@ -444,6 +445,7 @@
     tat.bindEvent();
     tat.hideDashboard();
 });
+
     function Subscriber(){}
     function Observer(){
     }
@@ -459,3 +461,19 @@
     Subscriber.prototype.update=function(){
         throw new Error("Method not implemented.");
     }
+
+    /// yha me realtime taracking krunga user ke activity ka
+    /// jaise he user koe bhi filter change karega to try karenge already value hamre pass aa jaaye
+    // so that apply button par click karkte hai show kare ham
+    /*
+     jaise he user value change
+     for example :  zone , state , bsi
+     change hote hai alredy hamre pass value aa jaaye but apply button par click karne par bhi data nhi aa aaya hai
+     tab ham loader show karenge and ab ham 2.3 min ka loader laga denge ,
+
+     jisme loader hide kareke retry box show kar denge : ye bas user distraction ke liye hoga waki jiase kar rhe hai
+       vaise karta rahene data aate he show kar denege
+     */
+    function TatObserver(){}
+    function ZoneSubscriber(){}
+    function State(){}

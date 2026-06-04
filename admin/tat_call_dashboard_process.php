@@ -633,19 +633,12 @@ class BSIFilterUILoader implements UILoaderTAT{
     }
 }
 
-
-
-
-
-
-
-
 interface LoadCard{
-    function loadcard();
+    function uiloader();
 }
 
 class KPIsCardLoader implements LoadCard {
-    public function loadcard()
+    public function uiloader()
     {
         echo '<div class="tat-kpi-grid" style="margin-top:20px;">
                     <!-- Total Jobs -->
@@ -715,7 +708,7 @@ class KPIsCardLoader implements LoadCard {
 }
 
 class TrendAnalaysisChart implements LoadCard{
-    public function loadcard(){
+    public function uiloader(){
         echo '<div class="tat-row tat-col-1" style="margin-bottom:14px;">
                     <div class="tat-card tat-anim" style="animation-delay:.25s">
                         <div class="tat-ct">TAT Trend Analysis</div>
@@ -727,7 +720,7 @@ class TrendAnalaysisChart implements LoadCard{
 }
 
 class BucketCard implements LoadCard{
-    public function loadcard(){
+    public function uiloader(){
         echo '<div class="tat-row tat-col-21" style="margin-bottom:14px;">
 
                     <!-- TAT-1 Bucket -->
@@ -829,7 +822,7 @@ class BucketCard implements LoadCard{
 }
 
 class ZoneandAvgTat implements LoadCard{
-    public function  loadcard(){
+    public function  uiloader(){
         echo '<div class="tat-row tat-col-2" style="margin-bottom:14px;">
 
                     <!-- Avg TAT by Product -->
@@ -863,7 +856,7 @@ class ZoneandAvgTat implements LoadCard{
     }
 }
 class FooterUiRendering implements  LoadCard{
-    public function loadcard(){
+    public function uiloader(){
         echo '<div class="tat-footer">
                     <div class="tat-fleg">
                         <div class="tat-fleg-item"><div class="tat-fleg-dot" style="background:var(--green)"></div>Within TAT (&lt;24 HRS)</div>
@@ -883,9 +876,12 @@ class LoaderCardFactory{
             return new TrendAnalaysisChart();
         }
         if($value===3){
-            return new ZoneandAvgTat();
+            return new BucketCard();
         }
         if($value===4){
+            return new ZoneandAvgTat();
+        }
+        if($value===5){
             return new FooterUiRendering();
         }
         return 0;
@@ -893,15 +889,14 @@ class LoaderCardFactory{
 }
 
 class UIRender {
-    public static function render($orders=[1,2,3,4]){
-        echo '<section class="hidden" id="dashboard_home">';
+    public static function render($orders=[1,2,3,4,5]){
+        echo '<section class="" id="dashboard_home">';
         if(!is_array($orders)){
             return;
         }
         foreach ($orders as $order) {
-            LoaderCardFactory::cardfactory($order)->loadcard();
+            (LoaderCardFactory::cardfactory($order))->uiloader();
         }
         echo '<section>';
     }
 }
-

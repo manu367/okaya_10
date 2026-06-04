@@ -1,5 +1,4 @@
 <?php
-
 require_once("../includes/config.php");
 global $link1,$screenwidth;
 function loaderUser_1($link1,$sapid,$userid){
@@ -22,16 +21,11 @@ function loaderUser_1($link1,$sapid,$userid){
     return $restunrData;
 }
 
-
 $userid=$_SESSION['userid']??'';
 $sapid=$_SESSION['sapid']??'';
 
-if($userid===''){
-    exit();
-}
-if($userid===''||$sapid===''){
-    exit();
-}
+if($userid===''){exit();}
+if($userid===''||$sapid===''){exit();}
 $user=loaderUser_1($link1,$sapid,$userid);
 
 /*
@@ -44,9 +38,8 @@ $user=loaderUser_1($link1,$sapid,$userid);
                         It's mean Dashboard-pendingcall-data-grid.php me problem
   Error : Invalid server response :
                                    Session out ho gya hai , Referesh Page
-  Error : Request timeout. Server taking too long. :
-                                                     Referesh Page and check internet connection is tooo low
-
+Error : Request timeout. Server taking too long. :
+  Referesh Page and check internet connection is tooo low
  */
 
 $pagination='dashboard-pendingcall-data-grid.php';

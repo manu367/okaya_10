@@ -53,10 +53,14 @@ $pagination='tat-call-data-grid.php';
             <?php include("../includes/leftnav2.php"); ?>
         </div>
         <div class="<?=$screenwidth?> tab-pane fade in active" id="home">
-            <div>
+            <div style="display: flex;flex-direction: row;justify-content: space-between;align-items: center;">
                 <div  style="margin-top: 10px;width: max-content" onclick="collNav(this)">
                     <img  class="card" style="padding: 10px;" width="40" height="40" src="https://img.icons8.com/ios/50/menu--v7.png" alt="menu--v7"/>
                 </div>
+                <div  style="margin-top: 10px;width: max-content" onclick="collNav(this)">
+                    <img  class="card" style="padding: 10px;" width="40" height="40" src="../img/filter.png" alt="menu--v7"/>
+                </div>
+
             </div>
             <!-- ══ FILTER BOX ══ -->
             <form style="margin-top: 0;" id="dashboard_form" method="post">
@@ -92,150 +96,13 @@ $pagination='tat-call-data-grid.php';
                     </div>
                 </div>
             </form>
-            <?php
-            /*
-            1= KPI card = we can nested rendering here
-            2. TrendAnalsyis =
-            3. Bucket card = nested rendering here posible
-            4. zone by and avg tat bucket table
-            */
-            UIRender::render(); // [1,2,3,4,5]
-            ?>
 
         </div><!-- /home -->
     </div>
 </div>
-<div id="dashboardLoader" class="dashboard-loader">
-    <div class="loader-box">
-        <div class="spinner"></div>
-        <p>Loading Dashboard...</p>
-    </div>
-</div>
-
 <?php
 include("../includes/footer.php");
 include("../includes/connection_close.php");
 ?>
-<script defer src="../js/tat_call_dashboard.js"> </script>
-<script>
-    $(document).ready(function () {
-        $('input[name="daterange"]').daterangepicker({
-            maxDate: moment(),
-            locale: { format: 'YYYY-MM-DD' }
-            });
-    });
-    /*
-src/
-│
-├── app/                         # App bootstrap & global configs
-│   ├── store/                  # Redux/Zustand store
-│   ├── routes/                 # Route management
-│   ├── providers/              # AuthProvider, ThemeProvider
-│   ├── layouts/                # AdminLayout, UserLayout
-│   └── App.jsx
-│
-├── core/                        # Pure core systems
-│   ├── firebase/
-│   │   ├── config.js
-│   │   ├── auth.js
-│   │   ├── realtime.js
-│   │   └── firestore.js
-│   │
-│   ├── supabase/
-│   │   ├── client.js
-│   │   └── services/
-│   │
-│   ├── api/                    # Axios configs
-│   │   ├── client.js
-│   │   ├── interceptors.js
-│   │   └── endpoints.js
-│   │
-│   ├── sql/                    # SQL backend handlers
-│   │   ├── user.api.js
-│   │   ├── admin.api.js
-│   │   └── report.api.js
-│   │
-│   └── constants/
-│
-├── modules/                     # FEATURE / MODULE BASED
-│
-│   ├── auth/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── pages/
-│   │   ├── authSlice.js
-│   │   ├── routes.jsx
-│   │   └── index.js
-│   │
-│   ├── admin/
-│   │   ├── components/
-│   │   ├── permissions/
-│   │   ├── users/
-│   │   ├── managers/
-│   │   ├── dashboard/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── pages/
-│   │   └── routes.jsx
-│   │
-│   ├── manager/
-│   │   ├── dashboard/
-│   │   ├── analytics/
-│   │   ├── reports/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── user/
-│   │   ├── profile/
-│   │   ├── settings/
-│   │   ├── dashboard/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── realtime-chat/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── firebase/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── notifications/
-│   ├── analytics/
-│   └── reports/
-│
-├── shared/                      # Reusable global things
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── forms/
-│   │   ├── tables/
-│   │   ├── modals/
-│   │   └── loaders/
-│   │
-│   ├── hooks/
-│   ├── utils/
-│   ├── helpers/
-│   ├── validations/
-│   ├── services/
-│   └── styles/
-│
-├── permissions/                 # RBAC system
-│   ├── roles.js
-│   ├── permissions.js
-│   ├── routeGuard.jsx
-│   └── accessControl.js
-│
-├── assets/
-│   ├── images/
-│   ├── icons/
-│   └── fonts/
-│
-├── config/
-│   ├── env.js
-│   └── app.config.js
-│
-└── main.jsx
-     */
-</script>
 </body>
 </html>
