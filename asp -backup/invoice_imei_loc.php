@@ -260,7 +260,7 @@ echo "select * from temp_barcode_tnx where browser_id='".$currentsessionid."' an
     </div><!--close panel-->
     
  	<div style="width: 100%; padding-top: 30px; text-align:center; display:inline-block; float:left">
-         <input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='challan_issue_part.php?refid=<?=base64_encode($po_no)?>&daterange=<?=$_REQUEST['entry_date']?>&status=<?=$_REQUEST['status']?>&doc_type=<?=$_REQUEST['doc']?><?=$pagenav?>'">
+         <input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='challan_issue_part.php?refid=<?=base64_encode($po_no)?>&daterange=<?=$_REQUEST['entry_date']?>&status=<?=$_REQUEST['status']?>&doc_type=<?=$_REQUEST['javaDoc']?><?=$pagenav?>'">
      </div>    
   </div><!--close panel group-->
  </div><!--close col-sm-9-->

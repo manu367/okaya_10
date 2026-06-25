@@ -807,9 +807,6 @@ $pagination='dashboard-pendingcall-data-grid.php';
                                 <h2 class="chart-title">Pending Calls by Aging Bucket (Days)</h2>
                                 <span class="chart-info">ℹ</span>
                             </div>
-                            <select class="chart-select">
-                                <option>Bar Chart</option>
-                            </select>
                         </div>
                         <div id="agingBucketChart" style="height:240px;"></div>
                     </div>
@@ -1075,65 +1072,94 @@ include("../includes/connection_close.php");
                         <th>View</th>
                     </tr>
                     </thead>
-
                     <tbody>
-
                     <tr>
                         <td>1</td>
-
                         <td>
                 <span class="table-text"
                       title="UP2605130001">
                       UP2605130001
                 </span>
                         </td>
-
                         <td>
                 <span class="table-text"
                       title="6589658745">
                       6589658745
                 </span>
                         </td>
-
                         <td>
                 <span class="table-text"
                       title="Test User Very Long Name">
                       Test User Very Long Name
                 </span>
                         </td>
-
                         <td>
                 <span class="table-text"
                       title="Inverter Battery Solar">
                       Inverter Battery Solar
                 </span>
                         </td>
-
                         <td class="td-bold">
                 <span class="table-text"
                       title="M001">
                       M001
                 </span>
                         </td>
-
                         <td>
                             <a href="job_view.php?refid=VVAyNjA1MTMwMDAx" class="btn-view">
                                 View
                             </a>
                         </td>
                     </tr>
-
                     </tbody>
-
                 </table>
-
             </div>
         </div>
         <div style="text-align: center;margin-top: 100px"><button class="btn btn-warning" onclick="modalClose()">Close</button></div>
     </div>
 </div>
-
 <script>
+    function Lnode(data){
+        this.data=data;
+        this.next=null;
+    }
+    function LinkedList(){
+        this.head=null;
+    }
+    LinkedList.prototype.addNode=function(data){
+        const node=new Lnode(data);
+        if(this.head===null){
+            this.head=node;
+            return;
+        }
+        let temp=this.head;
+        while (temp.next!==null){
+            temp=temp.next;
+        }
+        temp.next=node;
+    }
+    LinkedList.prototype.length=function (length){
+        if(this.head===null){
+            return 0;
+        }
+        let temp=this.head;
+        let count=0;
+        while (temp!=null){
+            count++;
+            temp=temp.next;
+        }
+        return count;
+    }
+    const list=new LinkedList();
+    list.addNode(20);
+    list.addNode(30);
+    list.addNode(40);
+    list.addNode(50);
+    list.addNode(60);
+    list.addNode(70);
+    console.log(list);
+    console.log(list.length());
+
     async function fetchBarJobData(category){
         category = category.replace(/\s*days?/i, '').trim();
         const response=await fetch(`../pagination/<?=$pagination?>?bar_bucket=${category}`)
@@ -1213,7 +1239,6 @@ include("../includes/connection_close.php");
             }
         });
     }
-
     async function modalOpen(self, category, title = "Unknown", bucket = "") {
         const modal = document.getElementById("myModal");
         const modalTitle = document.getElementById("popup_modal");
@@ -1930,8 +1955,18 @@ include("../includes/connection_close.php");
 
         }, 3500);
     }
-
-
+    // javascript -> typescript -> react js -> node js -> express js -> next js ->Docker->Nginex -> Aws
+    /*
+    Css Variale
+    Css Basic : typegrphy , backgrounf , display ,positing , media queries
+    units
+    Rulesets
+    Selectors
+    Psedudo code , class
+    Flex
+    grid
+    Visual Effects
+     */
 </script>
 </body>
 </html>

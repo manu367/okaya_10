@@ -118,124 +118,32 @@ include("../includes/connection_close.php");
 ?>
 <script defer src="../js/tat_call_dashboard.js"> </script>
 <script>
+
     $(document).ready(function () {
         $('input[name="daterange"]').daterangepicker({
             maxDate: moment(),
             locale: { format: 'YYYY-MM-DD' }
             });
     });
-    /*
-src/
-│
-├── app/                         # App bootstrap & global configs
-│   ├── store/                  # Redux/Zustand store
-│   ├── routes/                 # Route management
-│   ├── providers/              # AuthProvider, ThemeProvider
-│   ├── layouts/                # AdminLayout, UserLayout
-│   └── App.jsx
-│
-├── core/                        # Pure core systems
-│   ├── firebase/
-│   │   ├── config.js
-│   │   ├── auth.js
-│   │   ├── realtime.js
-│   │   └── firestore.js
-│   │
-│   ├── supabase/
-│   │   ├── client.js
-│   │   └── services/
-│   │
-│   ├── api/                    # Axios configs
-│   │   ├── client.js
-│   │   ├── interceptors.js
-│   │   └── endpoints.js
-│   │
-│   ├── sql/                    # SQL backend handlers
-│   │   ├── user.api.js
-│   │   ├── admin.api.js
-│   │   └── report.api.js
-│   │
-│   └── constants/
-│
-├── modules/                     # FEATURE / MODULE BASED
-│
-│   ├── auth/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── pages/
-│   │   ├── authSlice.js
-│   │   ├── routes.jsx
-│   │   └── index.js
-│   │
-│   ├── admin/
-│   │   ├── components/
-│   │   ├── permissions/
-│   │   ├── users/
-│   │   ├── managers/
-│   │   ├── dashboard/
-│   │   ├── hooks/
-│   │   ├── services/
-│   │   ├── pages/
-│   │   └── routes.jsx
-│   │
-│   ├── manager/
-│   │   ├── dashboard/
-│   │   ├── analytics/
-│   │   ├── reports/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── user/
-│   │   ├── profile/
-│   │   ├── settings/
-│   │   ├── dashboard/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── realtime-chat/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── firebase/
-│   │   ├── services/
-│   │   └── pages/
-│   │
-│   ├── notifications/
-│   ├── analytics/
-│   └── reports/
-│
-├── shared/                      # Reusable global things
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── forms/
-│   │   ├── tables/
-│   │   ├── modals/
-│   │   └── loaders/
-│   │
-│   ├── hooks/
-│   ├── utils/
-│   ├── helpers/
-│   ├── validations/
-│   ├── services/
-│   └── styles/
-│
-├── permissions/                 # RBAC system
-│   ├── roles.js
-│   ├── permissions.js
-│   ├── routeGuard.jsx
-│   └── accessControl.js
-│
-├── assets/
-│   ├── images/
-│   ├── icons/
-│   └── fonts/
-│
-├── config/
-│   ├── env.js
-│   └── app.config.js
-│
-└── main.jsx
-     */
+
+    function Observer(){}
+    function Subscriber(){}
+    Observer.prototype.attach=function(){
+        throw new Error('Some things is wrong');
+    }
+
+    Observer.prototype.unwatch=function(){
+        throw new Error('Some things is wrong');
+    }
+
+    Observer.prototype.notify=function(){
+        throw new Error('Some things is wrong');
+    }
+
+    Observer.prototype.setData=function (data){
+        throw new Error('Some things is wrong');
+    }
+
 </script>
 </body>
 </html>

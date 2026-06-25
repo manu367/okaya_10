@@ -65,7 +65,7 @@ window.CodeMirror = (function() {
     // Delayed object wrap timeouts, making sure only one is active. blinker holds an interval.
     var poll = new Delayed(), highlight = new Delayed(), blinker;
 
-    // mode holds a mode API object. doc is the tree of Line objects,
+    // mode holds a mode API object. javaDoc is the tree of Line objects,
     // frontier is the point up to which the content has been parsed,
     // and history the undo history (instance of History constructor).
     var mode, doc = new BranchChunk([new LeafChunk([new Line("")])]), frontier = 0, focused;
@@ -2222,7 +2222,7 @@ window.CodeMirror = (function() {
     // autofocus and no other element is focused.
     if (options.autofocus == null) {
       var hasFocus = document.body;
-      // doc.activeElement occasionally throws on IE
+      // javaDoc.activeElement occasionally throws on IE
       try { hasFocus = document.activeElement; } catch(e) {}
       options.autofocus = hasFocus == textarea ||
         textarea.getAttribute("autofocus") != null && hasFocus == document.body;

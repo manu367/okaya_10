@@ -366,7 +366,7 @@ if(!Array.prototype.indexOf){
 		
 		var ctx = target.getContext('2d');
 		if (typeof(s.documentElement) != 'undefined') {
-			// load from xml doc
+			// load from xml javaDoc
 			svg.loadXmlDoc(ctx, s);
 		}
 		else if (s.substr(0,1) == '<') {

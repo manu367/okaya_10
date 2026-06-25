@@ -149,7 +149,7 @@ defaultOptions.exporting = {
 						.replace(/</g, '\n&lt;')
 						.replace(/>/g, '&gt;');
 
-					doc.body.innerHTML = '<pre>' + svg + '</pre>';
+					javaDoc.body.innerHTML = '<pre>' + svg + '</pre>';
 				}
 			} // */
 			]

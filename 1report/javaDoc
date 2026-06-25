@@ -1,0 +1,200 @@
+========= Java =======
+Teaching =
+ Baisc
+   JVM Stucture
+   class loading
+  Memory manaemet
+  JVM Architecture : Class Loader Method Area Heap Stack PC Register Native Method Stack
+  Execution Engine
+  JIT Compiler
+  JVM Languages
+  Class Loading Process
+  Garbage Collectors
+  Serial GC
+  Parallel GC
+  G1 GC
+  ZGC basics
+  JVM Tuning Basics
+  Memory Allocation
+  Java Native Interface (JNI) : Calling native C/C++ code
+                                Native methods
+                                Performance implications
+
+______ Class Loading & Reflection ______
+Bootstrap class loader
+Extension class loader
+Application class loader
+Dynamic class loading
+Reflection API
+Class class
+Method class
+Constructor class
+Field class
+Dynamic object creation
+
+______Introduction Java________
+History of Java
+Features of Java
+JVM, JRE, JDK
+Java Architecture
+Bytecode
+Platform Independence
+Java Program Structure
+Compilation & Execution Process
+Setting up Java Environment
+Heap memory
+Stack memory
+Garbage collection
+finalize()
+Memory leaks basics
+Immutable class
+Marker interfaces
+Object cloning
+Serialization internals
+Reflection API
+Annotation Processing Compile-time processing Custom processors Code generation basics
+Enum
+Varargs
+keywords : volatile transient native strictfp
+Type Conversion : Implicit Casting
+                  Explicit Casting
+                  Upcasting
+                  Downcasting
+Marker Interface
+Functional Interface
+Pojo class , Bean
+
+_____Basics of Java Programming_____
+Variables
+Data Types Primitive Non-primitive
+Literals Type Casting
+Operators Input/Output
+
+____Control Statements_____
+if-else
+switch
+Loops
+break, continue,return
+
+_______Method_______
+Instance Methods
+Static Methods
+Method Parameters
+Return Types
+Recursive Methods
+
+______Array_______
+One-dimensional arrays
+Two-dimensional arrays
+Jagged arrays
+Array traversal
+Array sorting
+Searching algorithms
+Array copying
+Sorting
+
+_________String_______
+String
+StringBuffer
+StringBuilder
+StringTokenizer
+String Internals
+String Constant Pool
+SCP vs Heap
+Immutability mechanism
+String deduplication
+Interning
+
+______________Object-Oriented Programming (OOP)______
+Class & Object
+Methods
+this keyword
+Static keyword
+Packages
+Access Modifiers
+Inner Classes
+Wrapper Classes =Autoboxing Unboxing
+Generics : classes methods
+Object Class : hashCode() equals() clone() finalize() toString()
+
+________Constructors_____
+Constructors
+Constructor Overloading
+
+____Inheritance_____
+Inheritance
+Association
+Aggregation
+Composition
+
+__ More_____
+Encapsulation
+Polymorphism
+Abstraction
+
+_______ Exception Handling _______
+Errors vs Exceptions
+try-catch finally
+throw throws
+Custom exceptions
+Multiple catch blocks
+Checked vs unchecked exceptions
+Exception propagation
+Chained exceptions
+try-with-resources
+Suppressed exceptions
+Best practices
+Logging exceptions
+
+_____Multithreading______
+Thread lifecycle
+Creating threads
+Thread class
+Runnable interface
+Synchronization
+Inter-thread communication
+Deadlock
+Daemon threads
+Thread priorities
+
+
+__________ File handling______
+File class
+Byte streams
+Character streams
+Buffered streams
+Serialization
+Deserialization
+PrintWriter
+Scanner
+
+________ Java 8 Features_________
+Lambda expressions
+Functional interfaces
+Stream API
+Method references
+Optional class
+Default methods
+Date & Time API
+
+________Reflection & Dynamic Proxies______
+Proxy API
+InvocationHandler
+Runtime code inspection
+Dynamic method invocation
+
+________Concurrency___________
+Java Memory Model (JMM)
+Volatile keyword
+Atomic classes
+Executor Framework
+ThreadPoolExecutor
+Callable & Future
+CompletableFuture
+ForkJoinPool
+Locks
+ReentrantLock
+ReadWriteLock
+Semaphore
+CountDownLatch
+CyclicBarrier

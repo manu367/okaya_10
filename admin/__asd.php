@@ -1025,6 +1025,7 @@ include("../includes/connection_close.php");
         e.preventDefault();
         document.getElementById('dashboard_form').reset();
     });
+
 </script>
 </body>
 </html>

@@ -1,0 +1,20 @@
+-------- Introduction to Spring & Spring Boot -----------
+Spring Boot Architecture
+Dependency Injection basics
+Inversion of Control (IoC)
+
+------- Spring Core Concepts------------
+IoC Container
+Bean Lifecycle Bean Scope
+Dependency Injection Constructor Injection Setter Injection Autowiring
+@Component @Service @Repository @Controller
+
+------- Spring Boot Annotations--------
+@SpringBootApplication @Configuration @Bean
+@Autowired @Qualifier @Value @Primary @Lazy @Scope
+
+--------- REST API Development ---------
+Rest , Architecture
+@RestController @RequestMapping
+@GetMapping @PostMapping @PutMapping @DeleteMapping @PatchMapping
+@RequestParam @PathVariable @RequestBody

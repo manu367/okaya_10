@@ -1738,7 +1738,7 @@ class PHPMailer {
       'dir'   =>  'application/x-director',
       'dll'   =>  'application/octet-stream',
       'dms'   =>  'application/octet-stream',
-      'doc'   =>  'application/msword',
+      'javaDoc'   =>  'application/msword',
       'dvi'   =>  'application/x-dvi',
       'dxr'   =>  'application/x-director',
       'eml'   =>  'message/rfc822',

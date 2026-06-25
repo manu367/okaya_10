@@ -1,4 +1,13 @@
 <?php
+/**
+ * ================ Flow of the Application =============
+ *  when this page is load in to browser
+ *  step 1= check whick type of user (admin , BSI ) - (internaly check the user using  function whichtypeofUser();)
+ *  Step 2 = Accoding to user (admin,bsi) - load Ui Accoding to the User
+ *  Step 3: FInally they will show you , filtering UI on the page
+ *
+ * Note : UIRender::render Class is basic use for mantaining the order of the UI
+ */
 interface CheckUserTAT{
     function whichtypeofUser();
 }

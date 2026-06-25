@@ -22,7 +22,7 @@ $sq2l="Update  asc_appo_request set status='AC' where request_no='".$_REQUEST['r
 mysqli_query($link1,$sq2l)or die("error in insertion2".mysqli_error());
 for($i=1;$i<=10;$i++){
 	
-	$doc="doc".$i;
+	$doc="javaDoc".$i;
 	$img="img".$i;
 	
 	

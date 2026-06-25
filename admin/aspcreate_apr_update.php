@@ -32,7 +32,7 @@ mysqli_query($link1,$sql1)or die("error in insertion2".mysqli_error($link1));
 	$res_srch1=mysqli_query($link1,$sql_srch1);
 	while($row=mysqli_fetch_array($res_srch1))
 	{
-		$doc="doc".$row['id'];
+		$doc="javaDoc".$row['id'];
 		mysqli_query($link1,"update doc_upload set status='$_POST[app_status]',doc_check_rcsm='$_POST[$doc]',ck_dt_rcsm='$today' where id='$row[id]'") or die("error2".mysql_error($link1));	
 	}
 	

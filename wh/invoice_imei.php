@@ -225,7 +225,7 @@ if($_POST['final_sub']=='PROCESS'){
     </div><!--close panel-->
     
  	<div style="display:inline-block; float:left">
-         <input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='invoice_challan_view.php?refid=<?=base64_encode($po_no)?>&daterange=<?=$_REQUEST['entry_date']?>&status=<?=$_REQUEST['status']?>&doc_type=<?=$_REQUEST['doc']?><?=$pagenav?>'">
+         <input title="Back" type="button" class="btn<?=$btncolor?>" value="Back" onClick="window.location.href='invoice_challan_view.php?refid=<?=base64_encode($po_no)?>&daterange=<?=$_REQUEST['entry_date']?>&status=<?=$_REQUEST['status']?>&doc_type=<?=$_REQUEST['javaDoc']?><?=$pagenav?>'">
      </div>    
   </div><!--close panel group-->
  </div><!--close col-sm-9-->

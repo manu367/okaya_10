@@ -1410,7 +1410,7 @@ jQuery.support = (function() {
 		}
 	}
 
-	// Run tests that need a body at doc ready
+	// Run tests that need a body at javaDoc ready
 	jQuery(function() {
 		var container, div, tds, marginDiv,
 			divReset = "padding:0;margin:0;border:0;display:block;overflow:hidden;",
@@ -5413,7 +5413,7 @@ jQuery.fn.extend({
 		return !!selector && (
 			typeof selector === "string" ?
 				// If this is a positional/relative selector, check membership in the returned set
-				// so $("p:first").is("p:last") won't return true for a doc with two "p".
+				// so $("p:first").is("p:last") won't return true for a javaDoc with two "p".
 				rneedsContext.test( selector ) ?
 					jQuery( selector, this.context ).index( this[0] ) >= 0 :
 					jQuery.filter( selector, this ).length > 0 :

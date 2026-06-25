@@ -1,0 +1,10 @@
+Date Range 
+Location = location_master ,access_location
+product = partcode_master 3, 5
+
+Planning - request_cats product1, product 2
+redy = job=_cad _master (ready qty)
+total delay = 
+Stock Storage = jo product kitna maal para hua 
+               = bom_master  = bom_mdal_code
+                = inventory_status

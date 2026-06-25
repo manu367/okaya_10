@@ -1,0 +1,15 @@
+Problem on trains time-speed and distance
+1. Train crossing a pole / man / tree
+2. Train crossing a platform / bridge
+3. Two trains crossing each other (opposite direction)
+4. Two trains crossing each other (same direction)
+5. Train overtaking a man / cyclist
+   Same direction :    Relative Speed=Train−Man
+   Opposite direction: Relative Speed=Train+Man
+
+6. Finding train length
+7. Finding speed : Train ki speed
+8. Train entering and leaving tunnel
+9. Average speed based train problems
+10. Relative speed conceptual traps
+     “How much faster?” , “By what percent?” , “Time difference?”

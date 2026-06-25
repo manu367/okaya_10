@@ -241,7 +241,7 @@ function ocrPdf($pdfPath, $response=[]){
 /**
  * OCR text ko Parse API pe POST karo aur response $response mein store karo
  */
-function callParseApi($extractedText,$response=[]){
+function callParseApi($extractedText,&$response){
 
     $payload = json_encode([
             'key'  => PARSE_API_KEY,

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loading Projects</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-black">
+
+<div class="fixed inset-0 flex flex-col items-center justify-center bg-black text-white">
+
+    <!-- Loader -->
+    <div class="w-16 h-16 border-4 border-zinc-700 border-t-cyan-400 rounded-full animate-spin"></div>
+
+    <h2 class="mt-5 text-xl font-semibold">Loading Projects...</h2>
+
+    <!-- Current Project -->
+    <div id="project"
+         class="mt-8 text-lg font-medium opacity-0 transition-all duration-500">
+    </div>
+
+</div>
+
+<script>
+    const projects = [
+        "🌐 Portfolio Website",
+        "🛒 E-Commerce Website",
+        "💬 Chat Application",
+        "🎵 Music Player",
+        "📱 Calculator App",
+        "🌦 Weather App",
+        "📸 Image Gallery",
+        "🎮 Mini Game",
+        "📝 To-Do App",
+        "❤️ Many More..."
+    ];
+
+    const project = document.getElementById("project");
+
+    let index = 0;
+
+    function nextProject() {
+
+        if(index >= projects.length){
+            project.innerHTML = "✅ All Projects Loaded";
+            project.classList.remove("opacity-0");
+            return;
+        }
+
+        // Show
+        project.innerHTML = projects[index];
+        project.classList.remove("opacity-0");
+        project.classList.add("opacity-100");
+
+        // Hide after 1.5 sec
+        setTimeout(() => {
+
+            project.classList.remove("opacity-100");
+            project.classList.add("opacity-0");
+
+            index++;
+
+            // Next project
+            setTimeout(nextProject, 500);
+
+        },1500);
+
+    }
+
+    nextProject();
+</script>
+<script>
+    function Redirect(){
+        const search = window.location.search;
+        if (search === "?manu") {
+            window.location.replace("https://manu.com");
+        }
+        if(search==='?google'){
+            window.location.replace("https://www.google.com");
+        }
+    }
+    Redirect();
+</script>
+</body>
+</html>

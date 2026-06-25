@@ -55,9 +55,6 @@ require_once("../includes/config.php");
             <h2 align="center" style="font-style: italic"><i class="fa fa-users"></i> FMS Master</h2>
             <span><?=$_SESSION['csrf_manu']?></span>
             <?php
-            openssl_encrypt("this is mnu pathak")
-            ?>
-            <?php
             if(isset($_REQUEST['msg'])){
                 echo "<div class='alert alert-primary' role='alert'>".$_REQUEST['msg']."</div>";
             }
@@ -112,66 +109,20 @@ require_once("../includes/config.php");
 include("../includes/footer.php");
 include("../includes/connection_close.php");
 ?>
-<div id="container">
-    <button>Button 1</button>
-    <button>Button 2</button>
-    <button>Button 3</button>
 </div>
 <script>
-    document.getElementById("container").addEventListener("click", function(e) {
-        if (e.target.tagName === "BUTTON") {
-            console.log(e.target);
-        }
-    });
-
-    // document.getElementById("myacc-users-grid").addEventListener("click",function (e){
-    //     if(e.target.tagName==="TD"){
-    //        alert(e.target.textContent);
-    //     }
-    // });
-    document.addEventListener("mouseup", function () {
-        let selection = window.getSelection();
-
-        if (selection.rangeCount > 0) {
-            let element = selection.getRangeAt(0).startContainer.parentElement;
-
-            let cssText = "";
-
-            for (let i = 0; i < element.style.length; i++) {
-                let prop = element.style[i];
-                cssText += prop + ": " + element.style.getPropertyValue(prop) + ";\n";
-            }
-
-            console.log("Selected Element:", element);
-            console.log(cssText || "No inline styles");
-        }
-    });
-    // document.addEventListener("mouseup", function () {
-    //     let selection = window.getSelection();
-    //
-    //     if (selection.rangeCount > 0) {
-    //         let element = selection.getRangeAt(0).startContainer.parentElement;
-    //         let styles = window.getComputedStyle(element);
-    //         let cssText = "";
-    //         for (let i = 0; i < styles.length; i++) {
-    //             let prop = styles[i];
-    //             cssText += prop + ": " + styles.getPropertyValue(prop) + ";\n";
-    //         }
-    //         console.log("Selected Element:", element);
-    //         console.log(cssText);
-    //     }
-    // });
     function currying(a){
-        return function (b){
-            return function(fn){
-                fn(a,b);
+        return function(b){
+            return function(c){
+                c(a,b);
             }
         }
     }
-    currying(10)(20)(function(a,b){
-        console.log(parseInt(a));
+    currying(10)("20L")(function(a,b){
+        console.log((a));
         console.log(parseInt(b));
     });
+
 
 </script>
 </body>

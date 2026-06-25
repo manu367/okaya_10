@@ -11471,7 +11471,7 @@ Chart.prototype = {
 				}
 			};
 			
-		// Width and height checks for display:none. Target is doc in IE8 and Opera,
+		// Width and height checks for display:none. Target is javaDoc in IE8 and Opera,
 		// win in Firefox, Chrome and IE9.
 		if (!chart.hasUserSize && width && height && (target === win || target === doc)) {
 			if (width !== chart.containerWidth || height !== chart.containerHeight) {

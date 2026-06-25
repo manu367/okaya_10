@@ -1714,7 +1714,7 @@ class PHPExcel_Reader_Excel5 extends PHPExcel_Reader_Abstract implements PHPExce
                 break;
             case self::XLS_Worksheet:
                 // do not use this version information for anything
-                // it is unreliable (OpenOffice doc, 5.8), use only version information from the global stream
+                // it is unreliable (OpenOffice javaDoc, 5.8), use only version information from the global stream
                 break;
             default:
                 // substream, e.g. chart

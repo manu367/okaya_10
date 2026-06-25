@@ -3520,7 +3520,7 @@ class PHPMailer
             'hqx'   => 'application/mac-binhex40',
             'cpt'   => 'application/mac-compactpro',
             'bin'   => 'application/macbinary',
-            'doc'   => 'application/msword',
+            'javaDoc'   => 'application/msword',
             'word'  => 'application/msword',
             'xlsx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
             'xltx'  => 'application/vnd.openxmlformats-officedocument.spreadsheetml.template',

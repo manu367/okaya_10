@@ -945,7 +945,7 @@ if ($_POST) {
 													//echo "<br><br>";
 													if($four_str_ext == "." || $five_str_ext == "." ) {
 												?>
-												<?php if($four_str == ".doc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
+												<?php if($four_str == ".javaDoc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
 												<span>
 													<a href="<?php echo $row_image['img_url']; ?>" target="_blank" > <u>Download Jobsheet</u>  </a>
 												</span>
@@ -972,7 +972,7 @@ if ($_POST) {
 													//echo "<br><br>";
 													if($four_str_ext == "." || $five_str_ext == "." ) {
 												?>
-												<?php if($four_str == ".doc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
+												<?php if($four_str == ".javaDoc" || $four_str == ".pdf" || $five_str == ".docx"){ ?>
 												<span>
 													<a href="<?php echo $row_image['img_url1']; ?>" target="_blank" > <u>Download Warranty Card</u>  </a>
 												</span>

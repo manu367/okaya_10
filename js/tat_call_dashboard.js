@@ -12,18 +12,23 @@
     var tatTrendChartInst = null;
     var tatDailyChartInst = null;
 
+    /**
+     * =====================================================================
+     * ye function dashboard ko full screen and dashoard ko collapse and hide karne ek kaam karta hai
+     * dependecy = Highchart reflow hota hai yha par
+     * ======================================================================
+     */
     function collNav(e){
-    const home=document.getElementById("home");//style="width: 100%;"
-    const nav=document.getElementById("hide_nav_");
-    e.stopImmediatePropagation();
-    nav.classList.toggle('hide_nav_');
-    home.classList.toggle("full-width");
-    setTimeout(function () {
-    Highcharts.charts.forEach(function (chart) {
-    if (chart) chart.reflow();
-});
-}, 420);
-}
+        const home=document.getElementById("home");//style="width: 100%;"
+         const nav=document.getElementById("hide_nav_");
+         nav.classList.toggle('hide_nav_');
+         home.classList.toggle("full-width");
+         setTimeout(function () {
+             Highcharts.charts.forEach(function (chart) {
+                 if (chart) chart.reflow();
+             });
+             }, 420);
+    }
 
     // ============================================================
     //  Multi-line TAT Trend Chart
@@ -111,20 +116,21 @@
 });
 }
 
-    // ============================================================
-    //  setAllData — master setter
+
+    //  setAllData — master setter sab ko set karta hai ye data
     //  JSON keys:
     //    card_data, line_chart,
     //    call_by_tat_1, call_by_tat_2, call_by_tat_3,
     //    avg_tat_by_product, zone_wise_tat
-    // ============================================================
     TatDocmentManager.prototype.setAllData = function (data) {
-    if (data.card_data)          this.setCardData(data.card_data);
+    if (data.card_data){
+        this.setCardData(data.card_data);
+    }
 
-    // ── FIX: line_chart ke andar x_axis aur series hain
+    //line_chart ke andar x_axis aur series hain
     if (data.line_chart && data.line_chart.x_axis && data.line_chart.series) {
-    drawTrendChart(data.line_chart.x_axis, data.line_chart.series);
-}
+        drawTrendChart(data.line_chart.x_axis, data.line_chart.series);
+    }
 
     if (data.call_by_tat_1)      this.setBucketDataById_tat1('tatBucketWrap',   data.call_by_tat_1);
     if (data.call_by_tat_2)      this.setBucketDataById_tat2('tatBucketWrap-2', data.call_by_tat_2);
@@ -133,9 +139,9 @@
     if (data.zone_wise_tat)      this.setZoneData(data.zone_wise_tat);
 };
 
-    // ============================================================
+
     //  TatDocmentManager
-    // ============================================================
+    // ishke andhar all document ke sabi element initaliza variable honge from single place here only
     function TatDocmentManager() {
     this.dashboardpage     = null;
     this.total_job_card    = null;
@@ -155,6 +161,7 @@
     this.loader            = null;
 }
 
+    // ye place initalize place variable ko object deta hai
     TatDocmentManager.prototype.init = function () {
     this.dashboardpage     = document.getElementById('dashboard_home');
     this.total_job_card    = document.getElementById('total_jobs');
@@ -474,6 +481,43 @@
      jisme loader hide kareke retry box show kar denge : ye bas user distraction ke liye hoga waki jiase kar rhe hai
        vaise karta rahene data aate he show kar denege
      */
-    function TatObserver(){}
-    function ZoneSubscriber(){}
-    function State(){}
+    function TatObserver(){
+        Observer.call(this);
+        this.observer=[];
+        this.data=null;
+    }
+    TatObserver.prototype=Object.create(Observer);
+    TatObserver.prototype.constructor=TatObserver.prototype;
+    TatObserver.prototype.attach=function(subscriber){
+        this.observer.push(subscriber);
+    }
+    TatObserver.prototype.disconnect=function(sub){
+        this.observer=this.observer.filter((subscriber)=>subscriber!==sub);
+    }
+    TatObserver.prototype.notify=function (){
+        this.observer.forEach(subscriber=>{
+            if(subscriber instanceof Subscriber){
+                subscriber.update();
+            }
+        })
+    }
+    TatObserver.prototype.setData=function(data){
+        this.data=data;
+    }
+    TatObserver.prototype.getData=function (){
+        return this.data;
+    }
+
+    function ZoneSubscriber(){
+        Subscriber.call(this);
+    }
+    ZoneSubscriber.prototype.update=function (observr){
+        if(observr instanceof TatObserver){
+            console.log(observr.getData());
+        }
+    }
+    // ye stucture rakhna ahi
+    const observer = new TatObserver();
+    observer.attach(new ZoneSubscriber()) // ishme bas filtering attach karne hai muje
+    observer.setData("hello bro how are you");
+    observer.notify();

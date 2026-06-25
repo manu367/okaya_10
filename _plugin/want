@@ -1,298 +1,672 @@
+https://github.com/manu367/tech-burner.git
 
-SELECT COUNT(*) AS total_rows
-FROM (
-    SELECT
-        au.sapid           AS bsi_id,
-        au.username        AS bsi_username,
-        au.name            AS bsi_name,
-        zone_info.zonename AS zone,
-        lum.userloginid    AS engineer_id,
-        lum.locusername    AS engineer_name,
-        DATEDIFF(NOW(), jd.open_date) AS aging_days,
-        CASE jd.status
-            WHEN '2'  THEN 'Assigned'
-            WHEN '3'  THEN 'PNA'
-            WHEN '7'  THEN 'WIP'
-            WHEN '81' THEN 'Replacement'
-            ELSE 'Other'
-        END AS status_label,
-        jd.job_no,
-        jd.open_date,
-        jd.status AS raw_status
+# Complete Core Node.js Syllabus
 
-    FROM locationuser_master lum
+(Pure Node.js only — no Express, no databases, no frameworks, no frontend noise. Just the engine room.)
 
-    JOIN jobsheet_data jd
-        ON jd.eng_id = lum.userloginid
-        AND jd.status IN ('0','1','2','3','7','81')
+---
 
-    JOIN (
-        SELECT
-            sapid,
-            MIN(username) AS username,
-            MIN(name)     AS name
-        FROM admin_users
-        WHERE status = '1'
-          AND designation_id = '45'
-        GROUP BY sapid
-    ) au ON au.sapid = lum.mapped_bsi
+# 1. Introduction to Node.js
 
-    LEFT JOIN (
-        SELECT
-            ar.userid,
-            MIN(zm.zonename) AS zonename
-        FROM access_region ar
-        JOIN state_master sm ON sm.stateid = ar.stateid
-        JOIN zone_master zm  ON zm.zoneid  = sm.zoneid
-        WHERE ar.status = 'Y'
-        GROUP BY ar.userid
-    ) zone_info ON zone_info.userid = au.username
+## Basics
 
-    GROUP BY
-        au.sapid,
-        au.username,
-        au.name,
-        zone_info.zonename,
-        lum.userloginid,
-        lum.locusername,
-        jd.job_no,
-        jd.open_date,
-        jd.status
+ What is Node.js
+ History of Node.js
+ Why Node.js was created
+ Node.js vs Browser JavaScript
+ Advantages and limitations
+ Use cases of Node.js
+ Single-threaded architecture
+ Event-driven architecture
+ Non-blocking I/O
 
-) AS counted;
+## Installation & Environment
 
-================================ give All Data Ageing based |==================
-SELECT
-    @row_num := @row_num + 1 AS sr_no,
-    main.*
-FROM (
-    SELECT
-        au.sapid           AS bsi_id,
-        au.username        AS bsi_username,
-        au.name            AS bsi_name,
-        zone_info.zonename AS zone,
-        lum.userloginid    AS engineer_id,
-        lum.locusername    AS engineer_name,
-        DATEDIFF(NOW(), jd.open_date) AS aging_days,
-        CASE jd.status
-            WHEN '2'  THEN 'Assigned'
-            WHEN '3'  THEN 'PNA'
-            WHEN '7'  THEN 'WIP'
-            WHEN '81' THEN 'Replacement'
-            ELSE 'Other'
-        END AS status_label,
-        CASE
-            WHEN DATEDIFF(NOW(), jd.open_date) <= 1              THEN '0-1 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) = 2               THEN '2 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 3  AND 5  THEN '3-5 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 6  AND 10 THEN '6-10 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 11 AND 15 THEN '11-15 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) >= 16             THEN 'Above 15'
-            ELSE 'Unknown'
-        END AS aging_bucket,
-        jd.job_no,
-        jd.open_date,
-        jd.status AS raw_status
+ Installing Node.js
+ Understanding LTS vs Current version
+ Checking Node and npm versions
+ Node.js runtime environment
+ Running JavaScript with Node
+ Node CLI basics
 
-    FROM locationuser_master lum
+---
 
-    JOIN jobsheet_data jd
-        ON jd.eng_id = lum.userloginid
-        AND jd.status IN ('0','1','2','3','7','81')
+# 2. V8 Engine
 
-    -- ✅ FIX: LIMIT 1 hata diya, per sapid ek hi username lo MIN se
-    JOIN (
-        SELECT
-            sapid,
-            MIN(username) AS username,   -- ✅ per sapid sirf 1 username
-            MIN(name)     AS name
-        FROM admin_users
-        WHERE status = '1'
-          AND designation_id = '45'      -- ✅ sirf BSI designation wale
-        GROUP BY sapid                   -- ✅ har BSI ke liye ek row
-    ) au ON au.sapid = lum.mapped_bsi
+## JavaScript Engine Fundamentals
 
-    LEFT JOIN (
-        SELECT
-            ar.userid,
-            MIN(zm.zonename) AS zonename
-        FROM access_region ar
-        JOIN state_master sm ON sm.stateid = ar.stateid
-        JOIN zone_master zm  ON zm.zoneid  = sm.zoneid
-        WHERE ar.status = 'Y'
-        GROUP BY ar.userid
-    ) zone_info ON zone_info.userid = au.username
+ What is V8
+ How V8 executes JavaScript
+ Compilation process
+ Just-In-Time (JIT) compilation
+ Memory management
+ Garbage collection
 
-    -- ✅ koi WHERE filter nahi - sab BSI ke sab jobs
-    GROUP BY
-        au.sapid,
-        au.username,
-        au.name,
-        zone_info.zonename,
-        lum.userloginid,
-        lum.locusername,
-        jd.job_no,
-        jd.open_date,
-        jd.status
+## Internals
 
-    ORDER BY au.sapid ASC, aging_days ASC
+ Call Stack
+ Heap Memory
+ Stack vs Heap
+ Optimization concepts
 
-) main,
-(SELECT @row_num := 0) AS counter;
+---
 
+# 3. Node.js Architecture
 
+## Internal Architecture
 
-=========================================| BSI ke filter bas par |=====================
-SELECT
-    @row_num := @row_num + 1 AS sr_no,
-    main.*
-FROM (
-    SELECT
-        au.sapid           AS bsi_id,
-        au.username        AS bsi_username,
-        au.name            AS bsi_name,
-        zone_info.zonename AS zone,
-        lum.userloginid    AS engineer_id,
-        lum.locusername    AS engineer_name,
-        DATEDIFF(NOW(), jd.open_date) AS aging_days,
-        CASE jd.status
-            WHEN '2'  THEN 'Assigned'
-            WHEN '3'  THEN 'PNA'
-            WHEN '7'  THEN 'WIP'
-            WHEN '81' THEN 'Replacement'
-            ELSE 'Other'
-        END AS status_label,
-        CASE
-            WHEN DATEDIFF(NOW(), jd.open_date) <= 1              THEN '0-1 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) = 2               THEN '2 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 3  AND 5  THEN '3-5 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 6  AND 10 THEN '6-10 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) BETWEEN 11 AND 15 THEN '11-15 Days'
-            WHEN DATEDIFF(NOW(), jd.open_date) >= 16             THEN 'Above 15'
-            ELSE 'Unknown'
-        END AS aging_bucket,
-        jd.job_no,
-        jd.open_date,
-        jd.status AS raw_status
+ Node.js architecture overview
+ Event-driven model
+ Single thread mechanism
+ Worker threads concept
+ libuv introduction
+ Thread pool
+ Background operations
 
-    FROM locationuser_master lum
+## Request Lifecycle
 
-    JOIN jobsheet_data jd
-        ON jd.eng_id = lum.userloginid
-        AND jd.status IN ('0','1','2','3','7','81')
+ How Node handles requests internally
+ Sync vs Async workflow
 
-    --  FIX 1: Sirf  ka PRIMARY/FIRST username lo, duplicate hatao
-    JOIN (
-        SELECT sapid, username, name
-        FROM admin_users
-        WHERE status = '1'
-          AND sapid = 'EMP001064' and username='OKAYAUSR017'   -- ✅ specific BSI
-        ORDER BY id ASC             -- ✅ sabse pehla/original username
-        LIMIT 1
-    ) au ON au.sapid = lum.mapped_bsi
+---
 
+# 4. REPL (Read Eval Print Loop)
 
-    LEFT JOIN (
-        SELECT
-            ar.userid,
-            MIN(zm.zonename) AS zonename
-        FROM access_region ar
-        JOIN state_master sm ON sm.stateid = ar.stateid
-        JOIN zone_master zm  ON zm.zoneid  = sm.zoneid
-        WHERE ar.status = 'Y'
-        GROUP BY ar.userid
-    ) zone_info ON zone_info.userid = au.username
+ What is REPL
+ Starting REPL
+ REPL commands
+ Using variables
+ Multi-line expressions
+ REPL shortcuts
+ REPL customization
 
-    WHERE lum.mapped_bsi = 'EMP001064'
+---
 
-    GROUP BY
-        au.sapid,
-        au.username,
-        au.name,
-        zone_info.zonename,
-        lum.userloginid,
-        lum.locusername,
-        jd.job_no,
-        jd.open_date,
-        jd.status
+# 5. Global Objects
 
-    ORDER BY aging_days ASC
+## Node Global APIs
 
-) main,
-(SELECT @row_num := 0) AS counter
+ global object
+ console
+ process
+ __dirname
+ __filename
+ exports
+ module
+ require
 
+## Process Object
 
+ process.argv
+ process.env
+ process.exit()
+ process.cwd()
+ process.pid
 
+---
 
+# 6. This Binding in Node.js
 
+ Global context
+ Function context
+ Object methods
+ Arrow functions
+ this in modules
+ this in strict mode
+ this inside callbacks
 
+---
 
+# 7. Event Loop
 
-    =========================================================
-    SELECT
-        au.sapid        AS bsi_id,
-        au.name         AS bsi_name,
-        lum.userloginid AS engineer_id,
-        lum.locusername AS engineer_name,
+---
 
-        -- Grand Total (all statuses)
-        COUNT(jd.job_id)    AS grand_total,
+# 8. Node Modules System
 
-        -- Status wise totals
-        SUM(CASE WHEN jd.status = '2'  THEN 1 ELSE 0 END) AS assigned_total,
-        SUM(CASE WHEN jd.status = '3'  THEN 1 ELSE 0 END) AS pna_total,
-        SUM(CASE WHEN jd.status = '7'  THEN 1 ELSE 0 END) AS wip_total,
-        SUM(CASE WHEN jd.status = '81' THEN 1 ELSE 0 END) AS replacement_total,
+## CommonJS Modules
 
-        -- Assigned - Bucket wise
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) <= 1               THEN 1 ELSE 0 END) AS assigned_b1,
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) = 2                THEN 1 ELSE 0 END) AS assigned_b2,
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 3  AND 5   THEN 1 ELSE 0 END) AS assigned_b3,
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 6  AND 10  THEN 1 ELSE 0 END) AS assigned_b4,
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 11 AND 15  THEN 1 ELSE 0 END) AS assigned_b5,
-        SUM(CASE WHEN jd.status='2' AND DATEDIFF(NOW(),jd.open_date) >= 16              THEN 1 ELSE 0 END) AS assigned_b6,
+ What are modules
+ Creating modules
+ Exporting modules
+ Importing modules
+ module.exports
+ exports keyword
 
-        -- Replacement - Bucket wise
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) <= 1              THEN 1 ELSE 0 END) AS replacement_b1,
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) = 2               THEN 1 ELSE 0 END) AS replacement_b2,
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 3  AND 5  THEN 1 ELSE 0 END) AS replacement_b3,
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 6  AND 10 THEN 1 ELSE 0 END) AS replacement_b4,
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 11 AND 15 THEN 1 ELSE 0 END) AS replacement_b5,
-        SUM(CASE WHEN jd.status='81' AND DATEDIFF(NOW(),jd.open_date) >= 16             THEN 1 ELSE 0 END) AS replacement_b6,
+## Module Types
 
-        -- WIP - Bucket wise
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) <= 1               THEN 1 ELSE 0 END) AS wip_b1,
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) = 2                THEN 1 ELSE 0 END) AS wip_b2,
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 3  AND 5   THEN 1 ELSE 0 END) AS wip_b3,
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 6  AND 10  THEN 1 ELSE 0 END) AS wip_b4,
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 11 AND 15  THEN 1 ELSE 0 END) AS wip_b5,
-        SUM(CASE WHEN jd.status='7' AND DATEDIFF(NOW(),jd.open_date) >= 16              THEN 1 ELSE 0 END) AS wip_b6,
+ Local modules
+ Built-in modules
+ Third-party modules
 
-        -- PNA - Bucket wise
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) <= 1               THEN 1 ELSE 0 END) AS pna_b1,
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) = 2                THEN 1 ELSE 0 END) AS pna_b2,
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 3  AND 5   THEN 1 ELSE 0 END) AS pna_b3,
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 6  AND 10  THEN 1 ELSE 0 END) AS pna_b4,
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) BETWEEN 11 AND 15  THEN 1 ELSE 0 END) AS pna_b5,
-        SUM(CASE WHEN jd.status='3' AND DATEDIFF(NOW(),jd.open_date) >= 16              THEN 1 ELSE 0 END) AS pna_b6
+## Module Caching
 
-    FROM locationuser_master lum
+ How caching works
+ Clearing cache
 
-    JOIN jobsheet_data jd
-        ON jd.eng_id = lum.userloginid
-        AND jd.status IN ('0','1','2','3','7','81')
+---
 
-    JOIN admin_users au
-        ON au.sapid = lum.mapped_bsi
+# 9. ES Modules (ESM)
 
-    -- ✅ Yahan apna BSI sapid dalo
-    WHERE lum.mapped_bsi = 'EMP000920'
+ Introduction to ES Modules
+ import/export syntax
+ default export
+ named export
+ package.json type module
+ Dynamic imports
+ CommonJS vs ESM
+ Interoperability
 
-    GROUP BY
-        lum.userloginid,
-        lum.locusername,
-        au.sapid,
-        au.name
+---
 
-    ORDER BY
-        lum.locusername;
+# 10. NPM (Node Package Manager)
+
+## npm Basics
+
+ What is npm
+ npm init
+ Installing packages
+ Local vs global packages
+ package-lock.json
+
+## npm Commands
+
+ npm install
+ npm uninstall
+ npm update
+ npm list
+ npm outdated
+ npm cache
+
+## Semantic Versioning
+
+ Major version
+ Minor version
+ Patch version
+ ^ and ~ symbols
+
+---
+
+# 11. package.json
+
+ Structure of package.json
+ Dependencies
+ Dev dependencies
+ Scripts
+ Main entry
+ Module type
+ Engines field
+
+---
+
+# 12. npm Scripts
+
+ Creating scripts
+ Running scripts
+ Script chaining
+ Environment variables in scripts
+ Pre and post scripts
+
+---
+
+# 13. Core Modules
+
+---
+
+## HTTP Module
+
+### Server
+
+ Creating HTTP server
+ Request object
+ Response object
+ Routing manually
+ Sending responses
+ Headers
+ Status codes
+
+### Request Handling
+
+ Query parameters
+ URL parsing
+ Request methods
+ Handling POST data
+
+### Advanced
+
+ Streaming response
+ HTTPS basics
+
+---
+
+## FS (File System) Module
+
+### File Operations
+
+ Reading files
+ Writing files
+ Appending files
+ Renaming files
+ Deleting files
+
+### Directory Operations
+
+ Creating directories
+ Reading directories
+ Removing directories
+
+### Sync vs Async
+
+ Blocking operations
+ Non-blocking operations
+
+### File Watching
+
+ fs.watch()
+
+---
+
+## Path Module
+
+ path.basename()
+ path.dirname()
+ path.extname()
+ path.join()
+ path.resolve()
+ path.normalize()
+ Absolute vs relative paths
+
+---
+
+## OS Module
+
+ System information
+ CPU details
+ Memory details
+ Platform info
+ User info
+ Uptime
+
+---
+
+## URL Module
+
+ URL parsing
+ URL object
+ Query strings
+ URLSearchParams
+
+---
+
+## Events Module
+
+### EventEmitter
+
+ Creating events
+ Emitting events
+ Listening events
+ Multiple listeners
+ once()
+ removeListener()
+
+---
+
+## Stream Module
+
+### Stream Basics
+
+ What are streams
+ Types of streams
+
+### Stream Types
+
+ Readable streams
+ Writable streams
+ Duplex streams
+ Transform streams
+
+### Stream Operations
+
+ Pipe streams
+ Stream events
+ Backpressure
+
+---
+
+## Buffer Module
+
+ What is Buffer
+ Creating buffers
+ Buffer encoding
+ Buffer methods
+ Binary data handling
+
+---
+
+## Crypto Module
+
+ Hashing
+ Encryption basics
+ Decryption basics
+ Random bytes
+ Password hashing
+
+---
+
+## Timers Module
+
+ setTimeout
+ setInterval
+ setImmediate
+ clear functions
+
+---
+
+## Readline Module
+
+ Reading user input
+ Command line interaction
+ Question prompts
+ Interactive CLI programs
+
+---
+
+# 14. Asynchronous Programming
+
+## Fundamentals
+
+ Synchronous programming
+ Asynchronous programming
+ Blocking vs Non-blocking
+
+---
+
+## Callbacks
+
+ Callback functions
+ Callback hell
+ Inversion of control
+
+---
+
+## Promises
+
+ Creating promises
+ Promise states
+ then()
+ catch()
+ finally()
+ Promise chaining
+ Promise.all()
+ Promise.race()
+ Promise.any()
+ Promise.allSettled()
+
+---
+
+## Async/Await
+
+ async functions
+ await keyword
+ Sequential execution
+ Parallel execution
+
+---
+
+## Error Handling
+
+### Basic
+
+ try/catch
+ throw keyword
+
+### Async Errors
+
+ Promise rejection
+ Unhandled rejection
+ Error-first callbacks
+
+### Process Errors
+
+ uncaughtException
+ unhandledRejection
+
+---
+
+# 15. File Handling Deep Dive
+
+ Large file handling
+ Stream-based file processing
+ File descriptors
+ Permissions
+ Binary files
+
+---
+
+# 16. EventEmitter Deep Dive
+
+ Custom events
+ Event-driven applications
+ Listener management
+ Memory leak warnings
+
+---
+
+# 17. Streams Deep Dive
+
+ Internal buffering
+ HighWaterMark
+ Object mode
+ Custom streams
+ Pipeline API
+
+---
+
+# 18. Buffers & Binary Data
+
+ UTF-8 encoding
+ ASCII
+ Base64
+ Binary manipulation
+
+---
+
+# 19. Process & Environment
+
+ Environment variables
+ process.env
+ stdin/stdout/stderr
+ Exit codes
+ Signals
+
+---
+
+# 20. Command Line Applications
+
+ Building CLI tools
+ Parsing arguments
+ Interactive terminal apps
+ Terminal utilities
+
+---
+
+# 21. Child Processes
+
+ child_process module
+ exec()
+ spawn()
+ fork()
+ execFile()
+
+---
+
+# 22. Worker Threads
+
+ Introduction
+ CPU intensive tasks
+ Worker communication
+ Message channels
+
+---
+
+# 23. Debugging in Node.js
+
+ console debugging
+ Node inspect
+ Chrome DevTools
+ Breakpoints
+ Debugging async code
+
+---
+
+# 24. Error Handling Architecture
+
+ Operational errors
+ Programmer errors
+ Custom error classes
+ Logging basics
+
+---
+
+# 25. Node.js Internals
+
+ libuv
+ Thread pool
+ Internal queues
+ Native bindings
+ C++ bindings overview
+
+---
+
+# 26. Performance Optimization
+
+ Avoid blocking code
+ Efficient async code
+ Stream optimization
+ Memory optimization
+
+---
+
+# 27. Security Fundamentals in Node.js
+
+ Input validation basics
+ Environment variable safety
+ Buffer overflow awareness
+ Secure crypto usage
+
+---
+
+# 28. Testing Basics in Node.js
+
+(Core only — no external testing frameworks)
+
+ assert module
+ Basic test writing
+ Manual testing
+ Debugging tests
+
+---
+
+# 29. Node.js Best Practices
+
+ Folder structure
+ Modular coding
+ Naming conventions
+ Error handling patterns
+ Async best practices
+
+---
+
+# 30. Building Real Core Node.js Projects
+
+## Beginner
+
+ Calculator CLI
+ Notes app
+ File manager
+
+## Intermediate
+
+ Custom HTTP server
+ Logger system
+ Chat application using events
+
+## Advanced
+
+ Streaming file server
+ Custom package manager mini clone
+ CLI utilities
+ Multi-threaded processing app
+
+---
+
+# 31. Advanced Core Topics
+
+ Event loop internals
+ Memory leaks
+ Garbage collection tuning
+ Streams internals
+ Cluster module
+ IPC (Inter Process Communication)
+
+---
+
+# 32. Node.js Deployment Basics
+
+(Without cloud/platform frameworks)
+
+ Running Node apps
+ Environment configs
+ PM2 basics
+ Production considerations
+
+---
+
+# 33. Node.js Latest Features
+
+ Native fetch API
+ Web Streams API
+ Built-in test runner
+ Top-level await
+ AbortController
+ Native watch mode
+
+---
+
+# Suggested Learning Order
+
+```text
+Introduction
+→ V8
+→ Architecture
+→ Globals
+→ Modules
+→ npm
+→ Core Modules
+→ Async Programming
+→ Event Loop
+→ Streams
+→ Buffers
+→ Child Process
+→ Worker Threads
+→ Performance
+→ Security
+→ Projects
+→ Internals
+```
+
+---
+
+# Final Goal
+
+If you complete all these topics properly, you’ll understand:
+
+ How Node actually works under the hood
+ Why async code behaves the way it does
+ How servers work without frameworks
+ How streams power massive systems
+ How Node handles concurrency
+ How real backend runtime systems operate
+
+That’s the real Node.js path.
+Not tutorial-land. Not copy-paste Express CRUD.
+The machinery beneath the city lights.

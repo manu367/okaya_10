@@ -1,0 +1,114 @@
+1. Introduction of Node js
+What is Node.js History of Node.js
+V8 Engine
+Event-driven architecture
+Non-blocking I/O
+Single-threaded model
+Node.js vs Browser runtime Node.js use cases Node Version Manager (NVM)
+REPL
+
+2. Node.js Runtime Fundamentals
+Event Loop Call Stack Callback Queue Microtask Queue Timers phase I/O polling
+setTimeout vs setImmediate process.nextTick
+Async architecture Blocking vs non-blocking code
+
+3. Modules System
+CommonJS modules ES Modules in Node.js
+require()
+module.exports
+import/export
+Package entry points
+Module caching Path resolution
+Built-in modules Dynamic imports
+
+Asynchronous Programming in Node.js
+Callbacks Callback hell
+Promises async/await
+Promise chaining Error handling
+Parallel execution Promise.all Promise.race
+
+
+Error Handling
+Operational vs programmer errors
+Try-catch
+Async error handling
+Global error handling
+Uncaught exceptions
+Unhandled promise rejections
+Logging errors
+
+Environment Variables & Configuration
+dotenv Config management Secret handling Environment separation Twelve-factor app principles
+
+4. File System (fs Module)
+5.Path, OS, and Utility Modules
+6.Buffers and Streams
+7. Events and EventEmitter
+
+8.HTTP Module
+
+
+Worker Threads & Child Processes
+child_process module
+Worker Threads
+Clustering
+CPU-intensive tasks
+Background jobs
+
+9.Node Package Manager (NPM)
+npm init
+package.json package-lock.json
+Dependencies Dev dependencies
+Semantic versioning
+npm scripts
+Publishing packages
+npm registry npx
+
+
+Databases with Node.js
+A. MongoDB + Mongoose
+b.SQLDatabase (Prisma Sequelize TypeORM)
+Authenicatuion syste
+
+
+Security in Node.js
+Helmet CORS CSRF XSS Rate limiting SQL injection prevention
+Secure headers Environment security Secure password storage
+------------------------------------------------
+Express.js Framework
+Express architecture
+Routing
+Middleware
+Request handling
+Response handling
+Static files
+Route parameters
+Query strings
+Modular routes
+Error handling middleware
+
+Middleware Deep Dive
+Topics
+Built-in middleware
+Custom middleware
+Third-party middleware
+Authentication middleware
+Logging middleware
+Error middleware
+Request validation
+
+REST API Development
+Topics
+REST principles
+CRUD operations
+API versioning
+Resource naming
+Pagination
+Filtering
+Sorting
+Validation
+Status codes
+API documentation
+
+
+----------------------------------------------------------------

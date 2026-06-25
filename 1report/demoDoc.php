@@ -5,7 +5,7 @@ $currtime = date("His");
 //header("Content-Type: application/vnd.ms-word");
 //header("Content-Disposition: attachment; filename="
 //    .base64_decode($_REQUEST['rname']) . "_" .
-//    $today . "_" .$currtime . ".doc");
+//    $today . "_" .$currtime . ".javaDoc");
 //header("Pragma: no-cache");
 //header("Expires: 0");
 
